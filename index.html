@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liikkunyt – Tampere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--text:#1f2a44;--muted:#6b7793;--border:#dfe4ee;
+  --primary:#1d4ed8;--primary-d:#1e40af;--primary-text:#ffffff;
+  --chip:#ffffff;--chip-text:#1f2a44;
+  --lime:#c8e68e;--lime-text:#2d4a0d;
+  --amber:#fbd9a4;--amber-text:#5a3a05;
+  --danger:#c53b3b;--danger-soft:#fde3e3;
+  --shadow:0 1px 3px rgba(19,34,74,.06),0 8px 24px rgba(19,34,74,.08);
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.1;font-family:"Bricolage Grotesque","DM Sans",sans-serif;letter-spacing:-.02em;color:var(--primary)}
+a{color:var(--primary)}
+.muted{color:var(--muted)}.small{font-size:13px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin:20px 0 10px}
+.eyebrow:first-child{margin-top:0}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;
+  border:1.5px solid var(--border);background:var(--card);padding:12px 16px;
+  font-weight:600;font-size:15px;transition:all .15s;color:var(--text);text-decoration:none}
+.btn:hover{border-color:var(--primary);color:var(--primary)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-text);font-weight:700}
+.btn.primary:hover{background:var(--primary-d);border-color:var(--primary-d);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--text);border-color:var(--border)}
+.btn.block{width:100%}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+/* ── Chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--border);background:var(--chip);border-radius:999px;
+  padding:9px 16px;font-size:15px;font-weight:500;color:var(--chip-text);
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--primary)}
+.chip.on{background:var(--primary);border-color:var(--primary);color:var(--primary-text);font-weight:700}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.seg .chip{justify-content:center;border-radius:12px;padding:10px 4px;font-size:14px}
+
+/* ── Quick-answer rows ── */
+.qa{display:flex;align-items:center;gap:12px;width:100%;border:1.5px solid var(--border);
+  background:var(--chip);color:var(--chip-text);border-radius:14px;
+  padding:14px 16px;font-size:16px;font-weight:500;text-align:left;margin-bottom:8px;transition:all .15s}
+.qa:hover{border-color:var(--primary);color:var(--primary)}
+.qa.on{background:var(--primary);border-color:var(--primary);color:var(--primary-text);font-weight:700}
+.qa svg{flex-shrink:0;color:var(--primary)}
+.qa.on svg{color:var(--primary-text)}
+
+/* ── Form fields ── */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:14px;font-weight:600;color:var(--text)}
+input[type=text],input[type=number],input[type=time],select{
+  width:100%;border:1.5px solid var(--border);border-radius:12px;
+  padding:12px 14px;background:var(--card);font-size:16px;color:var(--text)}
+input::placeholder{color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--primary);height:28px;cursor:pointer}
+select option{background:var(--card)}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;
+  padding:4px 10px;font-size:12px;font-weight:700}
+.badge.ok{background:var(--lime);color:var(--lime-text)}
+.badge.grey{background:var(--chip);color:var(--muted);border:1px solid var(--border)}
+.badge.tram{background:#e8efff;color:var(--primary)}
+.badge.bus{background:#e8efff;color:var(--primary)}
+.badge.closed{background:var(--danger-soft);color:var(--danger)}
+
+/* ── Notes / callouts ── */
+.note{border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.5}
+.note.warn{background:var(--amber);color:var(--amber-text)}
+.note.info{background:var(--chip);color:var(--muted);border:1px solid var(--border)}
+.note.green{background:#e8efff;color:var(--primary)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  background:var(--primary);color:#fff;
+  padding:12px 18px;border-radius:14px;font-size:14px;font-weight:700;
+  z-index:2000;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+
+/* ── App shell ── */
+.app{min-height:100%;display:flex;flex-direction:column}
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:12px 16px;
+  display:flex;align-items:center;gap:10px}
+.hdr-brand h1{font-size:22px;color:var(--primary);font-weight:800;letter-spacing:-.03em}
+.hdr-brand .sub{font-size:12px;color:var(--muted)}
+.hdr-brand{flex:1}
+.langsw{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--primary);background:#eef3ff;border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px;color:var(--primary);white-space:nowrap}
+.langsw:hover{background:var(--primary);color:#fff}
+.avatar{width:38px;height:38px;border-radius:999px;border:0;
+  background:var(--primary);color:#fff;font-weight:800;
+  display:grid;place-items:center;font-size:14px}
+.screen{display:none;flex:1}
+.screen.on{display:block}
+
+/* ── Setup wizard ── */
+.setup{padding:22px 16px calc(110px + env(safe-area-inset-bottom,0px));max-width:540px;margin:0 auto}
+.setup h2{font-size:26px;font-weight:800;margin-bottom:6px}
+.setup .lead{color:var(--muted);margin:0 0 20px;font-size:15px}
+.wsteps{display:flex;gap:5px;margin:0 0 20px}
+.wsteps i{flex:1;height:5px;border-radius:5px;background:var(--border)}
+.wsteps i.done{background:var(--primary-d)}
+.wsteps i.cur{background:var(--primary)}
+.wstep{display:none}.wstep.on{display:block}
+.stepnum{font-size:12px;font-weight:700;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.wnav{display:grid;grid-template-columns:1fr;gap:10px;margin-top:24px;position:sticky;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);padding:10px 0;z-index:5}
+body.has-nav .wnav{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+.wnav .btn{min-height:50px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── GPS box & route preview ── */
+.gps-box{border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;background:var(--bg2)}
+.route-preview{margin-top:12px;border:1.5px solid var(--border);border-radius:14px;padding:12px;background:#fff}
+.route-preview:empty{display:none}
+.route-preview h4{margin:0 0 8px;font-size:14px;color:var(--primary)}
+.rp-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:13.5px}
+.rp-row:first-of-type{border-top:0}
+
+/* ── Bottom nav ── */
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.94);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));
+  display:none;justify-content:center}
+.bnav.on{display:flex}
+.bnav .in{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;max-width:560px}
+.bnav button{border:0;background:transparent;border-radius:12px;
+  padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:11.5px;font-weight:600;color:var(--muted)}
+.bnav button .n{width:26px;height:26px;border-radius:999px;border:2px solid var(--border);display:grid;place-items:center;font-size:12px;font-weight:800}
+.bnav button.on .n{background:var(--primary);border-color:var(--primary);color:#fff}
+.bnav button.on{color:var(--primary)}
+.bnav button .lbl{display:block}
+
+/* ── Home layout ── */
+.home{max-width:620px;margin:0 auto;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+.page{display:none}.page.on{display:block}
+.page-h{padding:18px 16px 8px}
+.page-h h2{font-size:22px;font-weight:800}
+.page-h p{margin:4px 0 0;color:var(--muted);font-size:14px}
+
+/* ── CLEAN STREET LEAFLET MAP ── */
+.mapwrap{position:relative;height:54vh;min-height:360px;margin:0 12px;border-radius:22px;overflow:hidden;
+  box-shadow:0 12px 32px rgba(19,34,74,.12),0 2px 6px rgba(19,34,74,.06);border:1.5px solid var(--border)}
+#map{position:absolute;inset:0;background:#e5eef7}
+
+/* Floating top-right recenter button */
+.map-top-bar{position:absolute;top:12px;right:12px;z-index:500;display:flex;gap:6px;align-items:center}
+.map-recenter{width:38px;height:38px;border-radius:12px;border:1px solid rgba(223,228,238,.95);
+  background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  display:grid;place-items:center;color:var(--text);box-shadow:0 4px 14px rgba(15,23,42,.12);transition:all .15s}
+.map-recenter:hover{color:var(--primary);transform:scale(1.05)}
+
+/* Floating bottom glass card on map */
+.map-pill{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(223,228,238,.95);
+  border-radius:16px;padding:12px 16px;font-size:14px;
+  box-shadow:0 10px 28px rgba(15,23,42,.14);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.map-pill-main{min-width:0;flex:1}
+.map-pill b{display:block;font-size:16px;color:var(--primary);font-family:"Bricolage Grotesque",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-pill .muted{font-size:13px;display:block;margin-top:2px}
+.map-pill-eta{flex-shrink:0;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;
+  padding:8px 12px;border-radius:12px;text-align:center;font-weight:800;line-height:1.1;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.map-pill-eta span{display:block;font-size:10px;font-weight:600;opacity:.85;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+
+.leaflet-container{font-family:inherit}
+.leaflet-bar a{color:var(--text)!important;background:rgba(255,255,255,.94)!important;backdrop-filter:blur(10px);border-bottom-color:var(--border)!important;width:36px!important;height:36px!important;line-height:36px!important}
+.leaflet-control-zoom{border:1px solid rgba(223,228,238,.95)!important;box-shadow:0 4px 14px rgba(15,23,42,.12)!important;border-radius:12px!important;overflow:hidden;margin-top:12px!important;margin-left:12px!important}
+.leaflet-bar a:hover{background:#fff!important;color:var(--primary)!important}
+
+/* Custom 3D Pin Markers */
+.pin{position:relative;width:36px;height:36px;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.pin:hover{transform:translateY(-4px) scale(1.08)}
+.pin .dot{position:absolute;inset:0;border-radius:999px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:3px solid #fff;box-shadow:0 6px 16px rgba(29,78,216,.45),0 2px 4px rgba(0,0,0,.22);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;transition:all .2s}
+.pin .tail{position:absolute;left:50%;bottom:-6px;width:10px;height:10px;background:#fff;transform:translateX(-50%) rotate(45deg);border-radius:2px;box-shadow:2px 2px 3px rgba(0,0,0,.12)}
+.pin.sel{transform:translateY(-5px) scale(1.18);z-index:999!important}
+.pin.sel .dot{background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 0 0 6px rgba(22,163,74,.25),0 8px 20px rgba(22,163,74,.5)}
+
+/* User "You" Marker with sonar pulse */
+.me-wrap{position:relative;width:24px;height:24px;display:grid;place-items:center}
+.me{width:18px;height:18px;border-radius:999px;background:#0ea5e9;border:3px solid #fff;box-shadow:0 0 0 5px rgba(14,165,233,.28),0 3px 8px rgba(0,0,0,.3);position:relative;z-index:2}
+.me-pulse{position:absolute;inset:-10px;border-radius:999px;border:2.5px solid rgba(14,165,233,.55);animation:sonar 2.2s infinite ease-out;pointer-events:none}
+@keyframes sonar{0%{transform:scale(.45);opacity:1}100%{transform:scale(1.65);opacity:0}}
+
+/* Animated flowing route line */
+@keyframes routeFlow{to{stroke-dashoffset:-28}}
+.leaflet-interactive.route-flow-anim{animation:routeFlow 1s linear infinite}
+
+/* Floating midpoint badge on the route */
+.route-mid-badge{background:rgba(15,23,42,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  color:#fff;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:700;
+  white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.25);border:1.5px solid rgba(255,255,255,.25);
+  display:inline-flex;align-items:center;gap:5px;transform:translate(-50%,-50%)}
+.route-mid-badge b{color:#60a5fa}
+
+.leaflet-tooltip{background:rgba(255,255,255,.96);backdrop-filter:blur(8px);color:var(--text);border:1px solid var(--border);
+  border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:6px 12px;box-shadow:0 6px 18px rgba(15,23,42,.12)}
+.leaflet-tooltip-top:before{border-top-color:var(--border)}
+.leaflet-control-scale-line{background:rgba(255,255,255,.85);border-color:var(--primary);color:var(--text);font-family:inherit;border-radius:4px}
+
+/* ── Directions panel ── */
+.dirs{padding:14px 16px;display:none}
+.dirs.on{display:block}
+.dirs h3{font-size:17px;font-weight:700;margin-bottom:12px;color:var(--text)}
+.modes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.mode{border:1.5px solid var(--border);border-radius:14px;padding:10px 4px;
+  text-align:center;background:var(--card);text-decoration:none;color:inherit;display:block;transition:all .15s}
+.mode:hover{border-color:var(--primary);transform:translateY(-1px)}
+.mode .t{font-weight:800;font-size:16px;font-family:"Bricolage Grotesque",sans-serif;color:var(--text)}
+.mode .d{font-size:12px;color:var(--muted);margin-top:2px}
+.mode.pref{border-color:var(--primary);background:#e8efff;box-shadow:0 0 0 2px #c7d7fb inset}
+.mode.pref .t,.mode.pref .d{color:var(--primary)}
+.mode.off{opacity:.55}
+.mode .mi{color:var(--primary)}
+.maplinks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 10px}
+.maplinks .btn{padding:10px 12px;font-size:13px}
+
+/* transit suggestions */
+.transit-section{margin-top:12px}
+.transit-section h4{font-size:14px;font-weight:700;color:var(--primary);margin:0 0 8px;
+  display:flex;align-items:center;gap:6px}
+.route-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:12px 14px;margin-bottom:8px}
+.route-card .rl{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.route-card .line-badge{display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:10px;font-weight:800;font-size:14px;
+  background:var(--primary);color:var(--primary-text);flex-shrink:0}
+.route-card .line-badge.bus{background:#e8efff;color:var(--primary)}
+.route-card .info b{font-size:15px;display:block}
+.route-card .info .ri{font-size:12.5px;color:var(--muted)}
+.route-card .stops-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:6px}
+.stops-row .dot{width:6px;height:6px;border-radius:999px;background:var(--primary);opacity:.5;flex-shrink:0}
+.data-notice{font-size:12px;color:var(--muted);margin-top:8px;padding:8px 10px;
+  background:var(--chip);border-radius:8px;border:1px solid var(--border)}
+
+/* ── Find / quick answers ── */
+.find{padding:0 16px 6px}
+details.more{margin-top:8px;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;background:var(--chip)}
+details.more summary{cursor:pointer;font-weight:600;color:var(--primary);list-style:none;font-size:15px}
+details.more summary::-webkit-details-marker{display:none}
+details.more[open] summary{margin-bottom:12px}
+.custom{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.q-answer{font-size:17px;font-weight:700;color:var(--primary);margin:14px 0 2px;font-family:"Bricolage Grotesque","DM Sans",sans-serif;letter-spacing:-.01em}
+.q-answer strong{color:var(--primary)}
+
+/* ── Card deck ── */
+.deck{padding:8px 16px 24px}
+.deck-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.deck-h h2{font-size:17px;font-weight:700}
+.deck-row{display:block}
+.stack{position:relative;padding-bottom:22px}
+.rbtn{width:clamp(48px,13vw,60px);height:clamp(48px,13vw,60px);border-radius:999px;border:1.5px solid var(--border);
+  background:var(--card);display:grid;place-items:center;font-size:22px;transition:all .15s}
+.rbtn.yes{background:var(--primary);border-color:var(--primary);color:var(--primary-text)}
+.rbtn.no{color:var(--muted)}
+.rbtn:hover.yes{background:var(--primary-d);transform:scale(1.05)}
+.rbtn:hover.no{color:var(--danger);border-color:var(--danger);transform:scale(1.05)}
+.fcard{position:relative;border-radius:22px;background:var(--card);
+  border:1px solid var(--border);box-shadow:var(--shadow);padding:clamp(14px,4vw,22px);
+  display:flex;flex-direction:column;gap:clamp(6px,1.6vw,10px);
+  overflow:hidden;touch-action:pan-y;user-select:none;
+  transition:transform .25s ease,opacity .25s ease;will-change:transform}
+.fcard .kv{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.fcard .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);min-width:62px}
+.fcard .v{font-size:clamp(20px,5vw,26px);font-weight:800;font-family:"Bricolage Grotesque",sans-serif;color:var(--text)}
+.fcard details.cd{border-top:1px solid var(--border);padding-top:10px;margin-top:8px;flex-shrink:0}
+.fcard details.cd summary{pointer-events:none;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);list-style:none;margin-bottom:2px}
+.fcard details.cd summary::-webkit-details-marker{display:none}
+.fcard details.cd .small{margin-top:4px;font-size:clamp(12px,3.3vw,13px)}
+.fcard.n1,.fcard.n2{position:absolute;inset:0;overflow:hidden}
+.fcard.n1{transform:scale(.96) translateY(10px);opacity:.75;pointer-events:none}
+.fcard.n2{transform:scale(.92) translateY(20px);opacity:.45;pointer-events:none}
+.fcard.drag{transition:none}
+.fcard h3{font-size:clamp(20px,5.5vw,28px);font-weight:800;color:var(--text);line-height:1.1}
+.fcard .fi{font-size:14px;color:var(--muted);margin-top:2px}
+.stamp{position:absolute;top:16px;padding:6px 14px;border:3px solid;border-radius:10px;
+  font-weight:800;font-size:22px;letter-spacing:.04em;opacity:0;
+  font-family:"Bricolage Grotesque",sans-serif;background:var(--card);z-index:2}
+.stamp.yes{left:16px;color:var(--primary);border-color:var(--primary)}
+.stamp.no{right:16px;color:var(--danger);border-color:var(--danger)}
+.empty{position:relative;min-height:220px;display:grid;place-items:center;text-align:center;
+  padding:24px;color:var(--muted);border:2px dashed var(--border);border-radius:22px}
+.foot-note{font-size:12.5px;background:var(--amber);color:var(--amber-text);border-radius:12px;padding:10px 12px;font-weight:500;margin:12px 0 0;line-height:1.5}
+.show-map-btn{margin-top:10px}
+
+/* ── Confirm sheet ── */
+.overlay{position:fixed;inset:0;background:rgba(10,20,50,.5);z-index:1000;
+  display:none;align-items:flex-end;justify-content:center}
+.overlay.on{display:flex}
+@media (min-width:700px){.overlay{align-items:center}.sheet{border-radius:22px!important}}
+.sheet{background:var(--bg2);width:100%;max-width:520px;max-height:92vh;overflow:auto;
+  border-radius:22px 22px 0 0;padding:16px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+.sheet .grab{width:44px;height:5px;border-radius:5px;background:var(--border);margin:0 auto 14px}
+.sheet h2{font-size:22px;font-weight:800;color:var(--primary);margin-bottom:6px}
+.confsteps{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:12px 0 16px}
+.cstep{text-align:center;font-size:11.5px;color:var(--muted)}
+.cstep i{display:block;height:5px;border-radius:5px;background:var(--border);margin-bottom:5px}
+.cstep.done i{background:var(--primary-d)}
+.cstep.cur i{background:var(--primary)}
+.cstep.cur{color:var(--text);font-weight:700}
+.timer{font-size:56px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;
+  margin:16px 0 4px;color:var(--primary);font-family:"Bricolage Grotesque",sans-serif}
+.bar{height:10px;border-radius:10px;background:var(--border);overflow:hidden;margin:8px 0 14px}
+.bar i{display:block;height:100%;background:var(--primary)}
+.stackbtns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+
+/* ── Card banner & inner buttons ── */
+.fcard .rank{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fcard .rank i{flex:1;display:flex;gap:3px}
+.fcard .rank b{flex:1;height:6px;border-radius:6px;background:var(--border)}
+.fcard .rank b.on{background:var(--primary)}
+.fcard .rank em{font-style:normal;color:var(--primary)}
+.fcard .banner{margin:calc(-1*clamp(14px,4vw,22px)) calc(-1*clamp(14px,4vw,22px)) 0;height:clamp(52px,14vw,72px);flex-shrink:0;border-radius:22px 22px 0 0;display:flex;align-items:flex-end;justify-content:space-between;padding:12px 18px;color:#fff;position:relative;overflow:hidden}
+.fcard .banner::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.08) 0 14px,transparent 14px 28px)}
+.fcard .banner.b0{background:linear-gradient(120deg,#1d4ed8,#60a5fa)}.fcard .banner.b1{background:linear-gradient(120deg,#0f766e,#5eead4)}.fcard .banner.b2{background:linear-gradient(120deg,#7c3aed,#c4b5fd)}.fcard .banner.b3{background:linear-gradient(120deg,#b45309,#fcd34d)}
+.fcard .banner .bn{font-family:"Bricolage Grotesque",sans-serif;font-size:44px;font-weight:800;line-height:1;opacity:.9;position:relative}
+.fcard .banner .bt{font-size:13px;font-weight:700;background:rgba(255,255,255,.22);padding:4px 10px;border-radius:999px;position:relative}
+.cardbtns{display:flex;justify-content:center;gap:22px;margin:12px 0 0;flex-shrink:0}
+.fcard .startover{margin:10px auto 2px;padding:7px 14px;font-size:13px;width:auto;border-radius:999px;background:transparent}
+.fcard .btn,.fcard .rbtn{flex-shrink:0;position:relative;z-index:3}
+.btn.notgoing{color:var(--danger);border-color:var(--danger);background:var(--danger-soft);margin-top:6px;padding:9px;font-size:14px}
+
+.steps-list{margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.5}
+.steps-list li{padding:5px 0;border-bottom:1px solid var(--border)}
+.steps-list li:last-child{border:0}
+
+/* ── Match ── */
+.mbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--primary);color:#fff;font-size:11px;padding:0 5px;margin-left:4px}
+.slotcard{padding:14px;margin-bottom:12px}
+.slotcard h3{font-size:17px;color:var(--text)}
+.slotcard .when{font-size:13px;color:var(--muted);margin:2px 0 10px}
+.prow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border)}
+.prow i{width:34px;height:34px;border-radius:999px;background:var(--primary);color:#fff;font-style:normal;font-weight:800;font-size:12px;display:grid;place-items:center;flex-shrink:0}
+.prow .pi{flex:1;min-width:0}.prow .pi b{display:block}.prow .pi span{font-size:12.5px;color:var(--muted)}
+.prow .btn{padding:7px 11px;font-size:13px}
+.prow .btn.matched{background:var(--lime);border-color:var(--lime);color:var(--lime-text)}
+.join-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+
+/* ── Admin ── */
+.admin{padding:18px 16px 40px;max-width:900px;margin:0 auto}
+.admin h2{font-size:24px;font-weight:800;color:var(--primary)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.kpi{padding:14px}
+.kpi b{font-size:28px;display:block;font-weight:800;color:var(--primary);font-family:"Bricolage Grotesque",sans-serif}
+.kpi span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-weight:700;color:var(--muted);font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+.tblwrap{overflow-x:auto}
+.live{display:inline-block;width:8px;height:8px;border-radius:99px;background:var(--primary);margin-right:4px;animation:pulseLive 1.5s infinite}
+@keyframes pulseLive{50%{opacity:.3}}
+.feed{display:flex;flex-direction:column;gap:6px}
+.ev{display:flex;gap:10px;padding:10px 12px;font-size:13.5px;align-items:flex-start}
+.ev time{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0}
+.lookrow{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;gap:10px}
+.lookrow+.lookrow,.toggle+.toggle{border-top:1px solid var(--border)}
+.lookrow .bar2{height:7px;border-radius:7px;background:var(--primary);min-width:4px}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;gap:8px}
+.sw{width:44px;height:24px;border-radius:99px;background:var(--border);position:relative;border:0;flex-shrink:0}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:99px;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw.on{background:var(--danger)}
+#demoSw.on{background:var(--primary)}.sw.on::after{left:22px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="hdr">
+    <div class="hdr-brand"><h1>Liikkunyt</h1><div class="sub" data-i18n="sub">Free training slots in Tampere</div></div>
+    <button class="langsw" id="langSw" title="Vaihda kieli / Switch language" aria-label="Switch language"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg><span id="langLbl">Suomi</span></button>
+    <div class="tabs" id="tabs" hidden style="display:none;gap:4px;background:var(--chip);border-radius:10px;padding:3px">
+      <button data-tab="home" class="on" style="border:0;background:transparent;border-radius:7px;padding:6px 10px;font-size:13px;font-weight:600;color:var(--muted)">Find</button>
+      <button data-tab="admin" id="tabAdmin" hidden style="border:0;background:transparent;border-radius:7px;padding:6px 10px;font-size:13px;font-weight:600;color:var(--muted)">Admin</button>
+    </div>
+    <button class="avatar" id="avatarBtn" title="Edit your profile" hidden>?</button>
+  </header>
+
+  <!-- SETUP WIZARD -->
+  <section class="screen on" id="s-setup"><div class="setup">
+    <div class="wsteps" id="wsteps"></div>
+    <div class="wstep on" data-step="1">
+      <div class="stepnum" data-i18n="w1">Step 1 of 3 — Your name</div>
+      <h2 data-i18n="w1h">Hi! What should we call you?</h2>
+      <p class="lead" data-i18n="w1p">Just a name and your age so we can match you with others nearby.</p>
+      <div class="field"><label for="fName" data-i18n="name">Your name</label><input type="text" id="fName" placeholder="e.g. Aino" autocomplete="given-name"></div>
+      <div class="field"><label for="fAge" data-i18n="age">Age</label><input type="number" id="fAge" min="10" max="99" placeholder="e.g. 19"></div>
+    </div>
+    <div class="wstep" data-step="2">
+      <div class="stepnum" data-i18n="w2">Step 2 of 3 — Favorite sports</div>
+      <h2 data-i18n="w2h">What do you like to do?</h2>
+      <p class="lead" data-i18n="w2p">Pick one or more. The first one becomes your default search.</p>
+      <div class="chips" id="fSports"></div>
+    </div>
+    <div class="wstep" data-step="3">
+      <div class="stepnum" data-i18n="w3">Step 3 of 3 — Starting point</div>
+      <h2 data-i18n="w3h">Where do you start from?</h2>
+      <p class="lead" data-i18n="w3p">Allow location access so we can calculate the fastest way to each facility, or pick a starting area in Tampere.</p>
+      <div class="gps-box">
+        <button type="button" class="btn primary block" id="btnAskGps" data-i18n="askGps">Allow location access and find fastest route</button>
+        <div class="small muted" id="locStatus" style="margin-top:8px"></div>
+      </div>
+      <button type="button" class="btn block" id="btnPickMap" style="margin-top:10px" data-i18n="pickOnMap">Or tap your starting point on the map</button>
+      <div class="eyebrow" style="margin-top:12px" data-i18n="orArea">Or choose a starting area</div>
+      <div class="chips" id="fStart"></div>
+      <div class="route-preview" id="routePreview"></div>
+      <p class="small muted" style="margin-top:12px" data-i18n="prefNote">Training time and transport preferences can be changed any time from the Profile tab.</p>
+    </div>
+    <div class="wnav"><button class="btn primary" id="wNext">Next</button></div>
+  </div></section>
+
+  <!-- MAIN APP -->
+  <section class="screen" id="s-home"><div class="home">
+
+    <!-- PAGE 1: PROFILE -->
+    <div class="page" id="pg-profile">
+      <div class="page-h"><h2 data-i18n="profileH">Your profile</h2></div>
+      <div style="padding:0 16px" id="profileInline"></div>
+    </div>
+
+    <!-- PAGE 2: MAP & DIRECTIONS -->
+    <div class="page" id="pg-map">
+      <div class="page-h"><h2 data-i18n="mapH">Map &amp; directions</h2><p id="mapSub"></p></div>
+      <div class="mapwrap">
+        <div id="map"></div>
+        <div class="map-top-bar">
+          <button type="button" class="map-recenter" id="btnRecenter" title="Fit route on map">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+          </button>
+        </div>
+        <div class="map-pill" id="mapPill">
+          <div class="map-pill-main"><b>No place selected yet</b><span class="muted">Choose one under Places.</span></div>
+        </div>
+      </div>
+      <div class="dirs" id="dirs">
+        <h3 id="dirsTitle">Directions</h3>
+        <div class="modes" id="modes"></div>
+        <div class="transit-section" id="transitSection"></div>
+        <button class="btn primary block" id="goConfirm" style="margin-top:14px" data-i18n="goHere">Go here</button>
+      </div>
+      <div id="mapEmptyCta" style="padding:12px 16px"><button class="btn block" id="toPlaces" data-i18n="pick">Pick a place</button></div>
+    </div>
+
+    <!-- PAGE 3: PLACES (default) -->
+    <div class="page on" id="pg-places">
+      <div class="page-h"><h2 data-i18n="find">Find a place</h2></div>
+      <div class="find">
+        <div id="quickRow"></div>
+        <details class="more" id="advancedPicker"><summary data-i18n="change">Change sport, day or time</summary>
+          <div class="custom">
+            <select id="qSport"></select>
+            <select id="qDay"><option value="0">Today</option><option value="1">Tomorrow</option></select>
+          </div>
+          <div class="field" style="margin-top:10px"><label>Training time: <b id="qTimeLbl" style="color:var(--primary)">17:00</b></label><input type="range" id="qTime" min="6" max="21" value="17"></div>
+          <div class="seg" id="qTransport" style="margin-top:8px"></div>
+        </details>
+        <p class="q-answer" id="qAnswer"></p>
+      </div>
+      <div class="deck">
+        <div class="deck-row"><div class="stack" id="stack"></div></div>
+        <button class="btn block show-map-btn" id="showOnMap" data-i18n="showMap">Show on map</button>
+        <p class="foot-note" data-i18n="footNote">Swipe right or tap the heart to choose. Tickets are personal and never reserve a hall; free slots are shared. Verify availability in Timmi before buying.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 4: MATCH -->
+    <div class="page" id="pg-match">
+      <div class="page-h"><h2 data-i18n="matchH">Training partners</h2><p data-i18n="matchSub">Join a slot and see who else is going at the same time.</p></div>
+      <div style="padding:0 16px 24px" id="matchBody"></div>
+    </div>
+  </div></section>
+
+  <!-- ADMIN -->
+  <section class="screen" id="s-admin"><div class="admin">
+    <h2>Operator view</h2>
+    <p class="small muted" id="adminMode" style="margin:4px 0 0">All user actions in this prototype appear here in real time.</p>
+    <div class="kpis">
+      <div class="card kpi"><b id="kUsers">0</b><span>profiles</span></div>
+      <div class="card kpi"><b id="kLooking">0</b><span>looking now</span></div>
+      <div class="card kpi"><b id="kSessions">0</b><span>active workouts</span></div>
+    </div>
+    <div class="eyebrow">Who is looking where</div>
+    <div class="card" id="lookList"></div>
+    <div class="eyebrow" style="margin-top:20px">Facility controls</div>
+    <p class="small muted" style="margin:0 0 8px">Toggle a facility closed (all users see it as unavailable) or refresh its data timestamp.</p>
+    <div class="card" id="ctrlList"></div>
+    <div class="eyebrow" style="margin-top:20px">Demo partners</div><div class="card"><div class="toggle"><div><b style="font-size:14px">Show demo partners to users</b><div class="small muted">Six sample people joined to slots, for presentations. Turn off to show only real users.</div></div><button class="sw" id="demoSw" aria-label="Toggle demo partners"></button></div></div>
+    <div class="eyebrow" style="margin-top:20px">All profiles</div>
+    <div class="card tblwrap"><table id="profTable"><thead><tr><th>Name</th><th>Age</th><th>Sports</th><th>Times</th><th>Transport</th><th>Last seen</th></tr></thead><tbody></tbody></table></div>
+    <div class="eyebrow" style="margin-top:20px"><span class="live"></span>Live activity</div>
+    <div class="feed" id="feed"></div>
+  </div></section>
+</div>
+
+<!-- Bottom nav -->
+<nav class="bnav" id="bnav"><div class="in">
+  <button data-pg="profile"><span class="n">1</span><span class="lbl" data-i18n="navProfile">Profile</span></button>
+  <button data-pg="map"><span class="n">2</span><span class="lbl" data-i18n="navMap">Map</span></button>
+  <button data-pg="places" class="on"><span class="n">3</span><span class="lbl" data-i18n="navPlaces">Places</span></button>
+  <button data-pg="match"><span class="n">4</span><span class="lbl"><span data-i18n="navMatch">Match</span> <b class="mbadge" id="matchBadge" hidden>0</b></span></button>
+</div></nav>
+
+<!-- Confirm overlay -->
+<div class="overlay" id="confirmOverlay"><div class="sheet" id="confirmSheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Transport data (Tampere) ── */
+const BUS_ROUTES={
+  'hervanta':[
+    {line:'3',type:'tram',from:'Keskustori / Sorin aukio',to:'Hervannan kampus',freq:'Every 7–10 min',duration:'~19 min',stops:['Sorin aukio','Koskipuisto','Sammonaukio','Hakametsä','Turtola','Hervantakeskus','Hervannan kampus']},
+    {line:'6',type:'bus',from:'Keskustori',to:'Hervanta',freq:'Every 20 min',duration:'~24 min',stops:['Keskustori','Nekala','Hervanta']},
+    {line:'30',type:'bus',from:'Linja-autoasema',to:'Hervanta',freq:'Every 20 min',duration:'~22 min',stops:['Linja-autoasema','Sammonkatu','Hervanta']}
+  ],
+  'kaukajarvi':[
+    {line:'6',type:'bus',from:'Keskustori',to:'Kaukajärvi',freq:'Every 15–20 min',duration:'~22 min',stops:['Keskustori','Kaleva','Messukylä','Kaukajärvi']},
+    {line:'9',type:'bus',from:'Keskustori',to:'Kaukajärvi / Annala',freq:'Every 15 min',duration:'~24 min',stops:['Keskustori','Sorin aukio','Viinikka','Hallila','Kaukajärvi']},
+    {line:'40',type:'bus',from:'Keskustori',to:'Kaukajärvi / Kangasala',freq:'Every 20 min',duration:'~20 min',stops:['Keskustori','Sammonkatu','Kaukajärvi']}
+  ],
+  'fac3':[
+    {line:'1',type:'tram',from:'Keskustori',to:'Pyynikintori / Särkänniemi',freq:'Every 7–10 min',duration:'~6 min',stops:['Keskustori','Tuulensuu','Pyynikintori','Särkänniemi']},
+    {line:'8',type:'bus',from:'Keskustori',to:'Mustalahti / Nääshalli',freq:'Every 15 min',duration:'~8 min',stops:['Keskustori','Hämeenpuisto','Nääshalli']}
+  ],
+  'stadion':[
+    {line:'1 / 3',type:'tram',from:'Keskustori',to:'Koskipuisto / Sorin aukio',freq:'Every 4–7 min',duration:'~5 min',stops:['Keskustori','Koskipuisto','Sorin aukio (walk 4 min to Ratina)']},
+    {line:'7',type:'bus',from:'Keskustori',to:'Ratina',freq:'Every 15 min',duration:'~6 min',stops:['Keskustori','Ratina']}
+  ],
+  'tesomaice':[
+    {line:'8',type:'bus',from:'Keskustori',to:'Tesoma',freq:'Every 12–15 min',duration:'~20 min',stops:['Keskustori','Pyynikintori','Pispala','Epilä','Tesoma']},
+    {line:'7',type:'bus',from:'Keskustori',to:'Tesoma',freq:'Every 15 min',duration:'~22 min',stops:['Keskustori','Rahola','Tesoma']}
+  ],
+  'tesomaball':[
+    {line:'8',type:'bus',from:'Keskustori',to:'Tesoma',freq:'Every 12–15 min',duration:'~20 min',stops:['Keskustori','Pyynikintori','Pispala','Epilä','Tesoma']},
+    {line:'7',type:'bus',from:'Keskustori',to:'Tesoma',freq:'Every 15 min',duration:'~22 min',stops:['Keskustori','Rahola','Tesoma']}
+  ],
+  'fac7':[
+    {line:'1',type:'tram',from:'Keskustori',to:'Kaupin kampus',freq:'Every 7–10 min',duration:'~11 min',stops:['Keskustori','Koskipuisto','Rautatieasema','Sammonaukio','Tays','Kaupin kampus']},
+    {line:'2',type:'bus',from:'Pyynikintori',to:'Kauppi',freq:'Every 15 min',duration:'~12 min',stops:['Keskustori','Tammelantori','Kauppi']}
+  ],
+  'messu':[
+    {line:'14',type:'bus',from:'Keskustori',to:'Messukeskus / Pirkkahalli',freq:'Every 20 min',duration:'~16 min',stops:['Keskustori','Hatanpää','Sarankulma','Ilmailunkatu']},
+    {line:'30',type:'bus',from:'Keskustori',to:'Ilmailunkatu',freq:'Every 20 min',duration:'~18 min',stops:['Keskustori','Hatanpää','Messukeskus']}
+  ]
+};
+
+/* ── Sample data ── */
+const SPORTS_EN=[['aikido','Aikido'],['amfootball','American football'],['archery','Archery'],['artgym','Artistic gymnastics'],['athletics','Athletics'],['badminton','Badminton'],['ball','Ball games'],['baseball','Baseball'],['basketball','Basketball'],['beachvolley','Beach volleyball'],['boxing','Boxing'],['kidsball','Children’s ball games'],['kidsparty','Children’s sports birthday parties'],['choral','Choral song'],['climbing','Climbing'],['cricket','Cricket'],['curling','Curling'],['cycling','Cycling'],['dance','Dance'],['discgolf','Disc golf'],['fencing','Fencing'],['figskating','Figure skating'],['floorball','Floorball'],['football','Football'],['func','Functional training'],['futsal','Futsal'],['golf','Golf'],['gym','Gym'],['handball','Handball'],['icehockey','Ice hockey'],['judo','Judo'],['karate','Karate'],['martial','Martial arts'],['orienteering','Orienteering'],['padel','Padel'],['pesapallo','Pesäpallo'],['pilates','Pilates'],['rhythmic','Rhythmic gymnastics'],['running','Running'],['skateboarding','Skateboarding'],['hall','Sports hall'],['squash','Squash'],['swimming','Swimming'],['tt','Table tennis'],['taekwondo','Taekwondo'],['tennis','Tennis'],['trampoline','Trampoline'],['volleyball','Volleyball'],['weightlifting','Weightlifting'],['wrestling','Wrestling'],['yoga','Yoga']];
+const SPORTS_FI={aikido:'Aikido',amfootball:'Amerikkalainen jalkapallo',archery:'Jousiammunta',artgym:'Telinevoimistelu',athletics:'Yleisurheilu',badminton:'Sulkapallo',ball:'Pallopelit',baseball:'Baseball',basketball:'Koripallo',beachvolley:'Beach volley',boxing:'Nyrkkeily',kidsball:'Lasten pallopelit',kidsparty:'Lasten liikuntasynttärit',choral:'Kuorolaulu',climbing:'Kiipeily',cricket:'Kriketti',curling:'Curling',cycling:'Pyöräily',dance:'Tanssi',discgolf:'Frisbeegolf',fencing:'Miekkailu',figskating:'Taitoluistelu',floorball:'Salibandy',football:'Jalkapallo',func:'Toiminnallinen harjoittelu',futsal:'Futsal',golf:'Golf',gym:'Kuntosali',handball:'Käsipallo',icehockey:'Jääkiekko',judo:'Judo',karate:'Karate',martial:'Kamppailulajit',orienteering:'Suunnistus',padel:'Padel',pesapallo:'Pesäpallo',pilates:'Pilates',rhythmic:'Rytminen voimistelu',running:'Juoksu',skateboarding:'Skeittaus',hall:'Liikuntasali',squash:'Squash',swimming:'Uinti',tt:'Pöytätennis',taekwondo:'Taekwondo',tennis:'Tennis',trampoline:'Trampoliini',volleyball:'Lentopallo',weightlifting:'Painonnosto',wrestling:'Paini',yoga:'Jooga'};
+let SPORTS=SPORTS_EN.slice();
+const SPORT_ROOM={badminton:'ball',basketball:'ball',floorball:'ball',futsal:'ball',handball:'ball',volleyball:'ball',kidsball:'ball',football:'hall',dance:'hall',pilates:'hall',yoga:'hall',rhythmic:'hall',artgym:'hall',kidsparty:'hall',boxing:'martial',judo:'martial',karate:'martial',taekwondo:'martial',wrestling:'martial',weightlifting:'gym',running:'func'};
+const roomTypes=s=>[s,...(SPORT_ROOM[s]?[SPORT_ROOM[s]]:[])];const roomType=s=>SPORT_ROOM[s]||s;
+let SPORT_NAME=Object.fromEntries(SPORTS);
+const TIMES_EN=[['morning','Morning (6–11)'],['afternoon','Afternoon (11–16)'],['evening','Evening (16–22)']];const TIMES_FI={morning:'Aamu (6–11)',afternoon:'Päivä (11–16)',evening:'Ilta (16–22)'};let TIMES=TIMES_EN.slice();
+const TRANSPORT_EN=[['walking','Walk'],['bicycling','Bike'],['driving','Car'],['transit','Bus'],['tram','Tram']];const TRANSPORT_FI={walking:'Kävely',bicycling:'Pyörä',driving:'Auto',transit:'Bussi',tram:'Ratikka'};let TRANSPORT=TRANSPORT_EN.slice();
+const TICON={walking:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="13" cy="4" r="2"/><path d="M10 22l2-7 3 2v5M7 13l3-5 4 2 3 3M12 8l-2 5"/></svg>',bicycling:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5.5" cy="17" r="3.5"/><circle cx="18.5" cy="17" r="3.5"/><path d="M15 6h-3l-4 8h8l-3-8 3 11"/></svg>',transit:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>',driving:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11M4 11h16v6H4zM6 17v2M18 17v2"/><circle cx="7.5" cy="14" r="1"/><circle cx="16.5" cy="14" r="1"/></svg>',tram:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="6" width="14" height="13" rx="3"/><path d="M5 13h14M9 22l-1-3M15 22l1-3M9 2l3 4 3-4"/></svg>'};
+let TNAME=Object.fromEntries(TRANSPORT.map(t=>[t[0],t[1]]));
+const STARTS_EN=[['gps','Use my location'],['centre','Tampere centre'],['hervanta','Hervanta'],['tesoma','Tesoma'],['kaukajarvi','Kaukajärvi']];const STARTS_FI={gps:'Käytä sijaintiani',centre:'Tampereen keskusta',hervanta:'Hervanta',tesoma:'Tesoma',kaukajarvi:'Kaukajärvi'};let STARTS=STARTS_EN.slice();
+const START_COORDS={centre:[61.4978,23.7610],hervanta:[61.4505,23.8580],tesoma:[61.5080,23.6200],kaukajarvi:[61.4720,23.8800]};
+const CLOCK='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+
+const OPEN_WEEK={1:[7,22],2:[7,22],3:[7,22],4:[7,22],5:[7,21],6:[9,20],0:[9,20]};
+const FAC=[
+ {id:'hervanta',availability:OPEN_WEEK,updated:'2026-10-13T10:57:00+03:00',name:'Hervannan vapaa-aikakeskus',fi:'Hervanta Leisure Centre',addr:'Lindforsinkatu 5',lat:61.44965,lng:23.84652,lipas:[522278,77867,88890,89678,80465,510207,98225,510206,89710],rooms:[{n:'Hilkka',t:'gym',lipas:522278},{n:'Reima',t:'hall',lipas:88890},{n:'Birgitta',t:'hall',lipas:89678},{n:'Desiree',t:'hall',lipas:510207},{n:'Eila',t:'hall',lipas:80465},{n:'Tauno',t:'martial',lipas:98225},{n:'Pertsa',t:'martial',lipas:510206},{n:'Functional room',t:'func',lipas:77867}]},
+ {id:'kaukajarvi',availability:OPEN_WEEK,updated:'2026-10-13T10:57:00+03:00',name:'Kaukajärven vapaa-aikatalo',fi:'Kaukajärvi Leisure House',addr:'Juvankatu 13',lat:61.46985,lng:23.87355,lipas:[78438,79792],rooms:[{n:'Lower gym',t:'gym',lipas:78438},{n:'Upper gym',t:'gym',lipas:78438},{n:'Ball hall',t:'ball',lipas:79792}]},
+ {id:'fac3',availability:OPEN_WEEK,updated:'2026-10-13T10:57:00+03:00',name:'Nääshalli',fi:'Nääshalli sports hall',addr:'Näsinlinnankatu 1',lat:61.50295,lng:23.74797,lipas:[78126,81943,89571,98344,98239,98391,98236,98414,98289,98444],rooms:[{n:'Gym',t:'gym',lipas:78126},{n:'Functional room',t:'func',lipas:98444},{n:'Sports hall',t:'hall',lipas:81943},{n:'Table tennis',t:'tt',lipas:89571},{n:'Aikido room',t:'aikido',lipas:98344},{n:'Budo rooms 2–6',t:'martial',lipas:98239}]},
+ {id:'stadion',availability:OPEN_WEEK,updated:'2026-10-13T10:57:00+03:00',name:'Tampereen stadion',fi:'Tampere Stadium (Ratina)',addr:'Ratinan rantatie 1',lat:61.49325,lng:23.76398,lipas:[78224,79743,82332,82333],rooms:[{n:'Gym',t:'gym',lipas:78224},{n:'Hall 1',t:'hall',lipas:79743},{n:'Hall 2',t:'hall',lipas:82332},{n:'Hall 3',t:'hall',lipas:82333}]},
+ {id:'tesomaice',availability:OPEN_WEEK,updated:'2026-10-13T10:57:00+03:00',name:'Tesoman jäähalli',fi:'Tesoma Ice Hall',addr:'Tesomankatu 1',lat:61.51063,lng:23.61512,lipas:[529628,528689],rooms:[{n:'Gym',t:'gym',lipas:529628}]},
+ {id:'tesomaball',availability:OPEN_WEEK,updated:'2026-10-13T10:57:00+03:00',name:'Tesoman palloiluhalli',fi:'Tesoma Ball Sports Hall',addr:'Tesomankatu 1',lat:61.50851,lng:23.62748,lipas:[522571,522572],rooms:[{n:'Gym',t:'gym',lipas:522572},{n:'Court 1',t:'ball',lipas:522571},{n:'Court 2',t:'ball',lipas:522571},{n:'Court 3',t:'ball',lipas:522571}]},
+ {id:'fac7',availability:OPEN_WEEK,updated:'2026-10-13T10:57:00+03:00',name:'Kauppi Sports Center',fi:'Kaupin urheilupuisto',addr:'Kuntokatu 17',lat:61.50836,lng:23.80785,lipas:[605616],rooms:[{n:'1st-floor court 1',t:'ball',lipas:605616},{n:'1st-floor court 2',t:'ball',lipas:605616},{n:'1st-floor court 3',t:'ball',lipas:605616}]},
+ {id:'messu',availability:OPEN_WEEK,updated:'2026-10-13T10:57:00+03:00',name:'Tampereen Messu- ja Urheilukeskus',fi:'Tampere Exhibition & Sports Centre',addr:'Ilmailunkatu 20',lat:61.46412,lng:23.73235,lipas:[89037,88985],rooms:[{n:'Hall A (sports season Dec–Mar)',t:'hall',lipas:89037,season:[12,1,2,3]},{n:'Hall B (year-round)',t:'hall',lipas:88985}]},
+ {id:'uintikeskus',kind:'timmi',name:'Tampereen uintikeskus',fi:'Tampere Swimming Centre',addr:'Joukahaisenkatu 7 A',lat:61.4991,lng:23.80548,lipas:[505972],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'50 m pool (8 lanes)',t:'swimming'},{n:'25 m pool (6 lanes)',t:'swimming'},{n:'Diving well',t:'swimming'},{n:'Teaching pool',t:'swimming'}]},
+ {id:'maauimala',kind:'timmi',name:'Tampereen maauimala',fi:'Tampere Outdoor Pool (summer)',addr:'Joukahaisenkatu 7 B',lat:61.49927,lng:23.80408,lipas:[602802],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'50 m outdoor pool',t:'swimming',season:[6,7,8]},{n:'Outdoor diving well',t:'swimming',season:[6,7,8]}]},
+ {id:'pyynikkipool',kind:'timmi',name:'Pyynikin uimahalli',fi:'Pyynikki Swimming Pool',addr:'Kortelahdenkatu 26',lat:61.49803,lng:23.74597,lipas:[505947],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'25 m pool (4 lanes)',t:'swimming'},{n:'Therapy pool',t:'swimming'}]},
+ {id:'hervantapool',kind:'timmi',name:'Hervannan uimahalli',fi:'Hervanta Swimming Pool',addr:'Torisevanraitti 7',lat:61.45325,lng:23.84311,lipas:[505804,78219],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'25 m pool',t:'swimming'},{n:'Gym',t:'gym'}]},
+ {id:'tesomapool',kind:'timmi',name:'Tesoman uimahalli',fi:'Tesoma Swimming Pool',addr:'Tuomarinkatu 7',lat:61.50992,lng:23.61621,lipas:[505980],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'25 m fitness pool (6 lanes)',t:'swimming'},{n:'Warm-water pool',t:'swimming'}]},
+ {id:'pyynikkihall',kind:'timmi',name:'Pyynikin palloiluhalli',fi:'Pyynikki Indoor Sports Centre',addr:'Ammattikoulunkatu 20',lat:61.49755,lng:23.73388,lipas:[79793,78026],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Main court (3 sectors)',t:'ball'},{n:'Gym',t:'gym'}]},
+ {id:'ikuri',kind:'timmi',name:'Ikurin liikuntahalli',fi:'Ikuri Sports Hall',addr:'Ikuri',lat:61.50299,lng:23.59887,lipas:[88936],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Gymnastics hall',t:'artgym'},{n:'Ball game space',t:'ball'}]},
+ {id:'hakametsa',kind:'timmi',name:'Hakametsän jäähallit',fi:'Hakametsä Ice Halls 1–3',addr:'Keltinkatu 2',lat:61.4959,lng:23.82416,lipas:[89868,89874,89799],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Hakametsä 1',t:'icehockey'},{n:'Hakametsä 2',t:'icehockey'},{n:'Hakametsä 3',t:'figskating'}]},
+ {id:'hervantaice',kind:'timmi',name:'Hervannan jäähalli',fi:'Hervanta Ice Arena',addr:'Hervanta',lat:61.45473,lng:23.83707,lipas:[89881],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Rink 1',t:'icehockey'},{n:'Rink 2',t:'figskating'}]},
+ {id:'sorsapuisto',kind:'timmi',name:'Sorsapuiston tekojäärata',fi:'Sorsapuisto outdoor rink (winter)',addr:'Sorsapuisto',lat:61.49601,lng:23.78712,lipas:[608153,608152],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Artificial ice field',t:'figskating',season:[11,12,1,2,3]},{n:'Rink',t:'icehockey',season:[11,12,1,2,3]}]},
+ {id:'kauppiturf',kind:'timmi',name:'Kaupin tekonurmikentät',fi:'Kauppi artificial turf pitches 1–4',addr:'Kuntokatu',lat:61.50933,lng:23.81018,lipas:[83745,83744,609014,521943],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Kauppi 1',t:'football'},{n:'Kauppi 2 (heated)',t:'football'},{n:'Kauppi 3',t:'football'},{n:'Kauppi 4',t:'football'}]},
+ {id:'pyynikkifield',kind:'timmi',name:'Pyynikin urheilukenttä',fi:'Pyynikki track & field',addr:'Pyynikki',lat:61.49576,lng:23.74303,lipas:[75938],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Athletics track',t:'athletics'},{n:'Pitch',t:'football'}]},
+ {id:'kaukajarvitennis',kind:'timmi',name:'Kaukajärven tennis- ja beachkentät',fi:'Kaukajärvi tennis & beach volley courts',addr:'Kaukajärvi',lat:61.46941,lng:23.8739,lipas:[88770,616720,101998,617007,617008],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Tennis court 1',t:'tennis'},{n:'Tennis court 2',t:'tennis'},{n:'Beach volley 1–3',t:'beachvolley'}]},
+ {id:'kalevabeach',kind:'timmi',name:'Kalevan beachvolleykenttä',fi:'Kaleva beach volley court',addr:'Joukahaisenkatu',lat:61.49633,lng:23.78614,lipas:[608151],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Beach court',t:'beachvolley',season:[5,6,7,8,9]}]},
+ {id:'tenniskeskus',kind:'timmi',name:'Tampereen tenniskeskus',fi:'Tampere Tennis Centre (Kauppi)',addr:'Kuntokatu 19',lat:61.50835,lng:23.84506,lipas:[89279,508518,508388,609926,508233,528348],availability:OPEN_WEEK,updated:'2026-10-25T08:00:00+03:00',rooms:[{n:'Tennis hall',t:'tennis'},{n:'Badminton hall',t:'badminton'},{n:'Floorball hall',t:'floorball'},{n:'Padel hall',t:'padel'},{n:'Squash hall',t:'squash'},{n:'Table tennis',t:'tt'}]}
+];
+
+/* ── State ── */
+const LS='lt_v14';
+let profile=null,uid=null,db=null,userCap=null,isOwner=false;
+let start=[61.4978,23.7610];
+let query={sport:'gym',day:0,hour:17};
+let cards=[],selected=null,map,markers={},meMarker=null;
+let overrides={},liveActivity=[],liveProfiles={},liveSessions={},liveIntents={},liveWaves={};
+let activeSession=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hh=h=>String(h).padStart(2,'0')+':00';
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2400)}
+function fmtTime(d){return d.toLocaleTimeString('fi-FI',{hour:'2-digit',minute:'2-digit'})}
+function fmtDate(d){return d.toISOString().slice(0,10)}
+function fmtAgo(iso){const m=Math.max(0,Math.round((Date.now()-new Date(iso))/60000));return m<1?'just now':m<60?m+' min ago':Math.round(m/60)+' h ago'}
+function initials(n){return (n||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function startLabel(){return profile?.start==='gps'?'My location':profile?.start==='map'?(lang==='fi'?'Valittu piste':'Chosen point'):(STARTS.find(s=>s[0]===profile?.start)?.[1]||'Tampere')}
+
+/* ── Language ── */
+const I18N={en:{sub:'Free training slots in Tampere',navProfile:'Profile',navMap:'Map',navPlaces:'Places',navMatch:'Match',find:'Find a place',change:'Change sport, day or time',trainingTime:'Training time',placesFor:'Places for you',footNote:'Swipe right or tap the heart to choose. Tickets are personal and never reserve a hall; free slots are shared. Verify availability in Timmi before buying.',showMap:'Show on map',mapH:'Map & directions',noPlace:'No place selected',chooseOne:'Choose one under Places.',pick:'Pick a place',goHere:'Go here',dirsNote:'Times are estimates. Open Google Maps for the exact route and live bus and tram times.',matchH:'Training partners',matchSub:'Join a slot and see who else is going at the same time.',profileH:'Your profile',
+  choose:'CHOOSE',skip:'SKIP',yourTime:'Your time',today:'today',tomorrow:'tomorrow',travel:'Travel',by:'by',noTram:'No tram route',noTramLong:'No tram stop within walking distance of both your start and this place. Try bus, or see Google Maps.',timmiOnly:'Timmi booking',liikkuva:'Liikkuva Tampere ticket',popular:'Popular slots right now',join:'Join',going:'Going',beFirst:'be the first',youGoing:'You are going',notGoing:'Not going anymore',imGoing:"I'm going at",rooms:'Rooms for',goingAt:'Going at',nobodyYet:'nobody yet',updated:'facility data updated',details:'Details',noRooms:'No Liikkuva Tampere rooms for this sport. Try another sport or time.',ptRoutes:'Public transport routes',gettingTo:'Getting to',openGmaps:'Open Google Maps',startOver:'Start over',startedOver:'All places are back',nearest:'Nearest',farthest:'Farthest',allSkipped:'You skipped every place.',streetRoute:'Street route',liveGmaps:'Live times and traffic in Google Maps',noStreetRoute:'Route via Tampere streets',
+  resultsLine:(n,s,d,t)=>`<strong>${n}</strong> places for ${s} ${d} at ${t}, nearest first.`,qaAt:(s,t)=>`${s} at ${t} today`,qaTonight:s=>`${s} tonight`,qaNow:s=>`${s} right now`,qaGymTomorrow:'Gym tomorrow morning',
+  noSlot:"You haven't joined a slot yet. Pick a place under Places, choose your time and tap <b>I'm going</b> on the card. People going to the same place at the same time appear here.",matched:'Matched',sent:'Request sent',accept:'Accept',trainTogether:'Train together',alsoLikes:'Also likes',nobodySlot:'Nobody else has joined this slot yet.',goingN:'going',todayCap:'Today',
+  step1:'Check availability',step2:'Purchase ticket',step3:'Arrive',step4:'Work out',timmiWarn:'<b>Check Timmi before you buy.</b> Opening hours shown here come from the facility data, not from live bookings. Always verify current availability in the Timmi system first.',personal:'A Liikkuva Tampere ticket is personal. It does not reserve a room for you alone; free slots are shared with everyone.',yourPick:'Your pick',openTimmi:'Open Timmi booking system',checked:'I checked Timmi, continue',buyText:'Buy or activate your personal Liikkuva Tampere ticket. Return here after purchase.',openShop:'Open the Sports Services online shop',haveTicket:'I have a valid ticket',headTo:'Make your way to',arriveText:'Confirm when you arrive to start your session timer.',arrived:'I have arrived',maxSession:'Maximum session: 3 hours',endsAt:'Session ends at',endWorkout:'End workout',hide:'Hide timer',cancel:'Cancel',
+  w1:'Step 1 of 3 — Your name',w1h:'Hi! What should we call you?',w1p:'Just a name and your age so we can match you with others nearby.',name:'Your name',age:'Age',w2:'Step 2 of 3 — Favorite sports',w2h:'What do you like to do?',w2p:'Pick one or more. The first one becomes your default search.',w3:'Step 3 of 3 — Starting point',w3h:'Where do you start from?',w3p:'Allow location access so we can calculate the fastest way to each facility, or pick a starting area in Tampere.',askGps:'Allow location access and find fastest route',gpsDenied:'Location is blocked in this preview window (it works on a normal site). Tap your starting point on the map below, or pick an area.',pickOnMap:'Or tap your starting point on the map',tapToSet:'Tap the map where you start',startSet:'Starting point set',routeSummary:'Fastest route',viaRoads:'via real streets',orArea:'Or choose a starting area',prefNote:'Training time and transport preferences can be changed any time from the Profile tab.',back:'Back',next:'Next',findPlaces:'Find places',saveFind:'Save and find places',
+  pName:'Name & age',pSports:'Favorite sports',pTimes:'Preferred times',pTransport:'Transport',pStart:'Starting point',save:'Save changes',reset:'Reset and start over'},
+ fi:{sub:'Vapaat liikuntavuorot Tampereella',navProfile:'Profiili',navMap:'Kartta',navPlaces:'Paikat',navMatch:'Kaverit',find:'Etsi paikka',change:'Vaihda laji, päivä tai aika',trainingTime:'Treeniaika',placesFor:'Paikat sinulle',footNote:'Pyyhkäise oikealle tai napauta sydäntä valitaksesi. Lippu on henkilökohtainen eikä varaa salia; vapaat vuorot ovat yhteisiä. Tarkista saatavuus Timmistä ennen ostoa.',showMap:'Näytä kartalla',mapH:'Kartta ja reitit',noPlace:'Paikkaa ei valittu',chooseOne:'Valitse paikka Paikat-välilehdeltä.',pick:'Valitse paikka',goHere:'Lähde tänne',dirsNote:'Ajat ovat arvioita. Avaa Google Maps tarkkaa reittiä ja bussien ja ratikan aikatauluja varten.',matchH:'Treenikaverit',matchSub:'Liity vuoroon ja katso, ketkä muut ovat tulossa samaan aikaan.',profileH:'Profiilisi',
+  choose:'VALITSE',skip:'OHITA',yourTime:'Aikasi',today:'tänään',tomorrow:'huomenna',travel:'Matka',by:'',noTram:'Ei ratikkareittiä',noTramLong:'Ratikkapysäkkiä ei ole kävelymatkan päässä sekä lähtöpaikasta että kohteesta. Kokeile bussia tai katso Google Maps.',timmiOnly:'Timmi-varaus',liikkuva:'Liikkuva Tampere -lippu',popular:'Suositut vuorot juuri nyt',join:'Liity',going:'Tulossa',beFirst:'ole ensimmäinen',youGoing:'Olet tulossa',notGoing:'En tulekaan',imGoing:'Tulen klo',rooms:'Tilat lajille',goingAt:'Tulossa klo',nobodyYet:'ei vielä ketään',updated:'tiedot päivitetty',details:'Lisätiedot',noRooms:'Tälle lajille ei ole Liikkuva Tampere -tiloja. Kokeile toista lajia tai aikaa.',ptRoutes:'Joukkoliikenteen reitit',gettingTo:'Reitti kohteeseen',openGmaps:'Avaa Google Maps',startOver:'Aloita alusta',startedOver:'Kaikki paikat palautettu',nearest:'Lähin',farthest:'Kaukaisin',allSkipped:'Ohitit kaikki paikat.',streetRoute:'Katureitti',liveGmaps:'Reaaliaikaiset ajat Google Mapsissa',noStreetRoute:'Reitti katuja pitkin',
+  resultsLine:(n,s,d,t)=>`<strong>${n}</strong> paikkaa lajille ${s} ${d} klo ${t}, lähin ensin.`,qaAt:(s,t)=>`${s} tänään klo ${t}`,qaTonight:s=>`${s} tänä iltana`,qaNow:s=>`${s} juuri nyt`,qaGymTomorrow:'Kuntosali huomenaamuna',
+  noSlot:'Et ole vielä liittynyt vuoroon. Valitse paikka Paikat-välilehdeltä, aseta aika ja napauta kortista <b>Tulen klo</b>. Samaan paikkaan samaan aikaan tulevat näkyvät täällä.',matched:'Pari löytyi',sent:'Pyyntö lähetetty',accept:'Hyväksy',trainTogether:'Treenataan yhdessä',alsoLikes:'Tykkää myös',nobodySlot:'Kukaan muu ei ole vielä liittynyt tähän vuoroon.',goingN:'tulossa',todayCap:'Tänään',
+  step1:'Tarkista saatavuus',step2:'Osta lippu',step3:'Saavu',step4:'Treenaa',timmiWarn:'<b>Tarkista Timmi ennen ostoa.</b> Tässä näytetyt aukioloajat tulevat paikkatiedoista, eivät varausjärjestelmästä. Varmista aina ajantasainen saatavuus Timmistä.',personal:'Liikkuva Tampere -lippu on henkilökohtainen. Se ei varaa tilaa sinulle; vapaat vuorot ovat kaikkien yhteisiä.',yourPick:'Valintasi',openTimmi:'Avaa Timmi-varausjärjestelmä',checked:'Tarkistin Timmin, jatka',buyText:'Osta tai aktivoi henkilökohtainen Liikkuva Tampere -lippu. Palaa tänne oston jälkeen.',openShop:'Avaa liikuntapalvelujen verkkokauppa',haveTicket:'Minulla on voimassa oleva lippu',headTo:'Lähde kohteeseen',arriveText:'Vahvista saapuminen aloittaaksesi ajastimen.',arrived:'Olen perillä',maxSession:'Enimmäisaika: 3 tuntia',endsAt:'Vuoro päättyy klo',endWorkout:'Lopeta treeni',hide:'Piilota ajastin',cancel:'Peruuta',
+  w1:'Vaihe 1/3 — Nimesi',w1h:'Hei! Miksi sinua kutsutaan?',w1p:'Nimi ja ikä, jotta voimme yhdistää sinut muihin lähellä.',name:'Nimesi',age:'Ikä',w2:'Vaihe 2/3 — Suosikkilajit',w2h:'Mitä tykkäät tehdä?',w2p:'Valitse yksi tai useampi. Ensimmäisestä tulee oletushakusi.',w3:'Vaihe 3/3 — Lähtöpaikka',w3h:'Mistä lähdet liikkeelle?',w3p:'Salli sijainti, niin laskemme nopeimman reitin jokaiseen paikkaan, tai valitse lähtöalue Tampereelta.',askGps:'Salli sijainti ja etsi nopein reitti',gpsDenied:'Sijainti on estetty tässä esikatselussa (toimii normaalilla sivustolla). Napauta lähtöpaikkasi kartalta tai valitse alue.',pickOnMap:'Tai napauta lähtöpaikka kartalta',tapToSet:'Napauta karttaa lähtöpaikassasi',startSet:'Lähtöpaikka asetettu',routeSummary:'Nopein reitti',viaRoads:'katuja pitkin',orArea:'Tai valitse lähtöalue',prefNote:'Treeniaikaa ja kulkutapaa voi muuttaa milloin vain Profiili-välilehdeltä.',back:'Takaisin',next:'Seuraava',findPlaces:'Etsi paikat',saveFind:'Tallenna ja etsi paikat',
+  pName:'Nimi ja ikä',pSports:'Suosikkilajit',pTimes:'Sopivat ajat',pTransport:'Kulkutapa',pStart:'Lähtöpaikka',save:'Tallenna muutokset',reset:'Nollaa ja aloita alusta'}};
+let lang=localStorage.getItem('lt_lang')||'en';
+const T=k=>(I18N[lang][k]??I18N.en[k]??k);
+function applyLang(){document.documentElement.lang=lang;$('#langLbl').textContent=lang==='en'?'Suomi':'English';
+  SPORTS=SPORTS_EN.map(([k,l])=>[k,lang==='fi'?(SPORTS_FI[k]||l):l]);SPORT_NAME=Object.fromEntries(SPORTS);
+  TRANSPORT=TRANSPORT_EN.map(([k,l])=>[k,lang==='fi'?TRANSPORT_FI[k]:l]);TNAME=Object.fromEntries(TRANSPORT.map(t=>[t[0],t[1]]));
+  TIMES=TIMES_EN.map(([k,l])=>[k,lang==='fi'?TIMES_FI[k]:l]);STARTS=STARTS_EN.map(([k,l])=>[k,lang==='fi'?STARTS_FI[k]:l]);
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=T(el.dataset.i18n)});
+  const qt=$('#qTimeLbl');if(qt)qt.parentElement.firstChild.textContent=T('trainingTime')+': ';}
+$('#langSw').onclick=()=>{lang=lang==='en'?'fi':'en';localStorage.setItem('lt_lang',lang);applyLang();
+  if(profile){buildQuick();refreshResults();renderMatch();if($('#pg-profile').classList.contains('on'))buildProfileInline();if(selected)updateMap()}else initSetup(profile);};
+
+/* ── SmartRoute: Multi-Engine Street Routing ── */
+class SmartRoute {
+  constructor(map, opts = {}) {
+    this.map = map;
+    this.opts = Object.assign({
+      color: '#2563eb',
+      casingColor: '#1e3a8a',
+      tramColor: '#16a34a',
+      timeoutMs: 6500,
+      fit: true,
+      onInfo: null
+    }, opts);
+    this.layers = [];
+    this.cache = new Map();
+    this.ctrl = null;
+  }
+
+  clear() {
+    this.layers.forEach(l => { try { this.map.removeLayer(l); } catch(e){} });
+    this.layers = [];
+  }
+
+  async fetchOSRMEurope(from, to, mode) {
+    const profileMap = { walking: 'routed-foot', cycling: 'routed-bike', bicycling: 'routed-bike', driving: 'routed-car', transit: 'routed-car' };
+    const p = profileMap[mode] || 'routed-foot';
+    const url = `https://routing.openstreetmap.de/${p}/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson&steps=true`;
+    const res = await fetch(url, { signal: this.ctrl.signal });
+    if (!res.ok) throw new Error('OSM-DE ' + res.status);
+    const j = await res.json();
+    if (j.code !== 'Ok' || !j.routes?.length) throw new Error('OSM-DE empty');
+    return this.parseOSRM(j.routes[0], mode);
+  }
+
+  async fetchProjectOSRM(from, to, mode) {
+    const profileMap = { walking: 'foot', cycling: 'bike', bicycling: 'bike', driving: 'car', transit: 'car' };
+    const p = profileMap[mode] || 'foot';
+    const url = `https://router.project-osrm.org/route/v1/${p}/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson&steps=true`;
+    const res = await fetch(url, { signal: this.ctrl.signal });
+    if (!res.ok) throw new Error('OSRM ' + res.status);
+    const j = await res.json();
+    if (j.code !== 'Ok' || !j.routes?.length) throw new Error('OSRM empty');
+    return this.parseOSRM(j.routes[0], mode);
+  }
+
+  parseOSRM(rt, mode) {
+    const km = rt.distance / 1000;
+    const min = Math.max(1,
+      mode === 'walking' ? Math.round(km / 5 * 60) :
+      (mode === 'bicycling' || mode === 'cycling') ? Math.round(km / 15 * 60) :
+      Math.max(2, Math.round(2 + km / 30 * 60))
+    );
+    return {
+      km,
+      min,
+      coords: rt.geometry.coordinates.map(c => [c[1], c[0]]),
+      steps: (rt.legs?.[0]?.steps || [])
+        .filter(s => s.distance > 12 || s.maneuver?.type === 'arrive')
+        .map(s => ({ type: s.maneuver.type, modifier: s.maneuver.modifier || '', road: s.name || '', m: Math.round(s.distance) }))
+    };
+  }
+
+  async route(from, to, mode = 'walking', badgeLabel = '', overrideMin = null) {
+    const key = `${mode}|${from[0].toFixed(5)},${from[1].toFixed(5)}|${to[0].toFixed(5)},${to[1].toFixed(5)}`;
+    if (this.ctrl) this.ctrl.abort();
+    this.ctrl = new AbortController();
+    const timer = setTimeout(() => this.ctrl.abort(), this.opts.timeoutMs);
+
+    try {
+      let r = this.cache.get(key);
+      if (!r) {
+        try {
+          r = await this.fetchOSRMEurope(from, to, mode);
+        } catch (e1) {
+          r = await this.fetchProjectOSRM(from, to, mode);
+        }
+        this.cache.set(key, r);
+      }
+      const finalMin = overrideMin != null ? overrideMin : r.min;
+      this.drawFancyRoute(r.coords, to, r.km, finalMin, mode, badgeLabel);
+      this.opts.onInfo?.({ km: r.km, min: finalMin, mode, fallback: false, steps: r.steps });
+      return r;
+    } catch (e) {
+      const pts = roadRoute(from, to);
+      const km = roadKm(from, to);
+      const speed = { walking: 5, cycling: 15, bicycling: 15, driving: 30, transit: 22 }[mode] || 5;
+      const calcMin = Math.max(2, Math.round(km / speed * 60));
+      const finalMin = overrideMin != null ? overrideMin : calcMin;
+      this.drawFancyRoute(pts, to, km, finalMin, mode, badgeLabel);
+      this.opts.onInfo?.({ km, min: finalMin, mode, fallback: false, steps: [] });
+      return { km, min: finalMin, coords: pts, steps: [] };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  drawFancyRoute(coords, to, km, min, mode, badgeLabel) {
+    this.clear();
+    const isTram = mode === 'tram';
+    const mainCol = isTram ? this.opts.tramColor : this.opts.color;
+    const casingCol = isTram ? '#14532d' : this.opts.casingColor;
+
+    const casing = L.polyline(coords, {
+      color: casingCol,
+      weight: 9,
+      opacity: 0.28,
+      lineJoin: 'round',
+      lineCap: 'round'
+    }).addTo(this.map);
+
+    const mainLine = L.polyline(coords, {
+      color: mainCol,
+      weight: 5.5,
+      opacity: 0.92,
+      lineJoin: 'round',
+      lineCap: 'round'
+    }).addTo(this.map);
+
+    const flowLine = L.polyline(coords, {
+      color: '#ffffff',
+      weight: 2.5,
+      opacity: 0.65,
+      dashArray: '6 22',
+      lineCap: 'round',
+      className: 'route-flow-anim'
+    }).addTo(this.map);
+
+    const endDot = L.circleMarker(to, {
+      radius: 8,
+      color: '#ffffff',
+      weight: 3,
+      fillColor: mainCol,
+      fillOpacity: 1
+    }).addTo(this.map);
+
+    const midIdx = Math.floor(coords.length / 2);
+    const midPt = coords[midIdx] || to;
+    const modeTitle = badgeLabel || TNAME[mode] || mode;
+    const midMarker = L.marker(midPt, {
+      interactive: false,
+      icon: L.divIcon({
+        className: '',
+        html: `<div class="route-mid-badge"><b>${min} min</b> · ${km.toFixed(1)} km · ${esc(modeTitle)}</div>`,
+        iconSize: [0, 0]
+      })
+    }).addTo(this.map);
+
+    this.layers.push(casing, mainLine, flowLine, endDot, midMarker);
+    if (this.opts.fit) {
+      this.map.fitBounds(mainLine.getBounds(), { padding: [54, 54], maxZoom: 16 });
+    }
+  }
+}
+
+let smartRoute=null;
+
+/* ── Tampere Tram & Dense Road Network ── */
+const TRAM_STOPS={
+ 'Kaupin kampus':[61.5075,23.8130],'Tays':[61.5050,23.8090],'Hippos':[61.5035,23.8020],'Kalevan kirkko':[61.5005,23.7960],'Sammonaukio':[61.4998,23.7880],'Tulli':[61.4990,23.7780],'Rautatieasema':[61.4985,23.7735],'Koskipuisto':[61.4968,23.7690],'Keskustori':[61.4978,23.7615],'Tuulensuu':[61.4968,23.7560],'Pyynikintori':[61.4958,23.7470],'Särkänniemi':[61.5005,23.7420],'Tikkutehdas':[61.5020,23.7330],'Santalahti':[61.5035,23.7245],'Hiedanranta':[61.5080,23.7070],'Tehdas':[61.5110,23.6990],'Niemen kartano':[61.5150,23.6900],'Niemenranta':[61.5180,23.6830],'Lentävänniemi':[61.5195,23.6760],'Pyhällönpuisto':[61.5210,23.6700],
+ 'Hervantajärvi':[61.4415,23.8640],'Etelä-Hervanta':[61.4460,23.8600],'Hervannan kampus':[61.4500,23.8570],'Hervantakeskus':[61.4525,23.8530],'Opiskelija':[61.4560,23.8515],'Pohjois-Hervanta':[61.4610,23.8480],'Hallila':[61.4700,23.8430],'Turtola':[61.4790,23.8320],'Hakametsä':[61.4895,23.8155],'Kalevanrinne':[61.4950,23.8070],'Uintikeskus':[61.4985,23.8000],'Kaleva':[61.5000,23.7935],'Sorin aukio':[61.4950,23.7700]};
+const TRAM_LINES={'1':['Kaupin kampus','Tays','Hippos','Kalevan kirkko','Sammonaukio','Tulli','Rautatieasema','Koskipuisto','Keskustori','Tuulensuu','Pyynikintori','Särkänniemi','Tikkutehdas','Santalahti','Hiedanranta','Tehdas','Niemen kartano','Niemenranta','Lentävänniemi','Pyhällönpuisto'],
+ '3':['Hervantajärvi','Etelä-Hervanta','Hervannan kampus','Hervantakeskus','Opiskelija','Pohjois-Hervanta','Hallila','Turtola','Hakametsä','Kalevanrinne','Uintikeskus','Kaleva','Sammonaukio','Tulli','Rautatieasema','Koskipuisto','Sorin aukio']};
+const TRAM_HEADWAY=7.5,TRAM_MIN_PER_STOP=2;
+function nearestStop(pt,maxKm){let best=null,bd=1e9;for(const [n,c] of Object.entries(TRAM_STOPS)){const d=dist(pt,c);if(d<bd){bd=d;best=n}}return bd<=maxKm?{name:best,km:bd}:null}
+function tramPlan(a,b){const s=nearestStop(a,2.0),t=nearestStop(b,1.2);if(!s||!t||s.name===t.name)return null;
+  const walkA=Math.round(s.km*1.3/5*60),walkB=Math.round(t.km*1.3/5*60);const direct=Object.entries(TRAM_LINES).find(([l,st])=>st.includes(s.name)&&st.includes(t.name));
+  const legs=[];if(direct){const [l,st]=direct;const i=st.indexOf(s.name),j=st.indexOf(t.name);const seq=i<j?st.slice(i,j+1):st.slice(j,i+1).reverse();legs.push({line:l,from:s.name,to:t.name,stops:seq})}
+  else{const shared=TRAM_LINES['1'].filter(x=>TRAM_LINES['3'].includes(x));const lA=Object.entries(TRAM_LINES).find(([l,st])=>st.includes(s.name)),lB=Object.entries(TRAM_LINES).find(([l,st])=>st.includes(t.name));if(!lA||!lB)return null;
+    const xfer=shared.reduce((best,x)=>{const c=Math.abs(lA[1].indexOf(x)-lA[1].indexOf(s.name))+Math.abs(lB[1].indexOf(x)-lB[1].indexOf(t.name));return c<=best.c?{x,c}:best},{x:shared[0],c:1e9}).x;
+    const seg=(st,p,q)=>{const i=st.indexOf(p),j=st.indexOf(q);return i<j?st.slice(i,j+1):st.slice(j,i+1).reverse()};
+    legs.push({line:lA[0],from:s.name,to:xfer,stops:seg(lA[1],s.name,xfer)});legs.push({line:lB[0],from:xfer,to:t.name,stops:seg(lB[1],xfer,t.name)})}
+  let wA=walkA,wB=walkB;if(legs.length===2&&legs[0].stops.length<=2){wA=Math.round(dist(a,TRAM_STOPS[legs[1].from])*1.3/5*60);legs.shift()}if(legs.length===2&&legs[1].stops.length<=2){wB=Math.round(dist(TRAM_STOPS[legs[0].to],b)*1.3/5*60);legs.pop()}
+  const ride=legs.reduce((m,l)=>m+(l.stops.length-1)*TRAM_MIN_PER_STOP,0);const wait=Math.round(TRAM_HEADWAY/2)*legs.length;
+  return{legs,walkA:wA,walkB:wB,ride,wait,total:wA+wait+ride+wB,path:[a,...legs.flatMap(l=>l.stops.map(n=>TRAM_STOPS[n])),b]}}
+
+const ROAD_NODES={
+  tesoma:[61.5090,23.6300],tesomaw:[61.5098,23.6180],ikuri:[61.5045,23.6050],lielahti:[61.5120,23.6850],epila:[61.4985,23.6900],
+  santalahti:[61.5005,23.7230],pispala:[61.4990,23.7200],amuri:[61.5020,23.7500],pyynikintori:[61.4945,23.7440],pyynikkis:[61.4972,23.7380],
+  keskustori:[61.4978,23.7610],koskipuisto:[61.4965,23.7680],asema:[61.4985,23.7735],tammelantori:[61.4990,23.7760],
+  sorsapuisto:[61.4962,23.7855],kaleva:[61.5000,23.7990],uintikeskus:[61.4990,23.8050],tays:[61.5050,23.8080],kauppi:[61.5080,23.8075],tennisk:[61.5082,23.8380],
+  hakametsa:[61.4970,23.8130],messukyla:[61.4850,23.8400],
+  kaukajarvi_n:[61.4742,23.8755],kaukajarvi_e:[61.4725,23.8815],kaukajarvi_c:[61.4718,23.8762],kaukajarvi:[61.4700,23.8736],kaukajarvi_s:[61.4688,23.8742],
+  ratina:[61.4935,23.7640],hatanpaa:[61.4800,23.7620],viinikka:[61.4860,23.7750],nekala:[61.4890,23.7900],
+  lakalaiva:[61.4650,23.7780],sarankulma:[61.4640,23.7320],
+  hervantaj:[61.4700,23.8350],hervantan:[61.4565,23.8450],hervantak:[61.4500,23.8560],hervantavak:[61.4496,23.8465],vuores:[61.4350,23.8100]
+};
+const ROAD_EDGES=[
+  ['ikuri','tesomaw','Tesomankatu'],['tesomaw','tesoma','Tesomankatu'],['tesoma','lielahti','Nokiantie'],['tesoma','epila','Tesoman valtatie'],
+  ['lielahti','santalahti','Paasikiventie'],['epila','pispala','Pispalan valtatie'],['santalahti','pispala','Pispalan valtatie'],
+  ['pispala','pyynikkis','Pirkankatu'],['pyynikkis','pyynikintori','Mariankatu'],['santalahti','amuri','Paasikiventie'],
+  ['amuri','keskustori','Näsilinnankatu'],['pyynikintori','keskustori','Hämeenkatu'],['keskustori','koskipuisto','Hämeenkatu'],
+  ['koskipuisto','asema','Hämeenkatu'],['asema','tammelantori','Itsenäisyydenkatu'],['asema','sorsapuisto','Yliopistonkatu'],
+  ['sorsapuisto','kaleva','Sammonkatu'],['tammelantori','kaleva','Teiskontie'],['kaleva','uintikeskus','Joukahaisenkatu'],
+  ['kaleva','tays','Teiskontie'],['tays','kauppi','Kuntokatu'],['tays','tennisk','Toimelankatu'],
+  ['kaleva','hakametsa','Hervannan valtaväylä'],['hakametsa','messukyla','Messukylänkatu'],
+  ['messukyla','kaukajarvi_n','Kangasalantie'],['kaukajarvi_n','kaukajarvi_e','Kangasalantie'],['kaukajarvi_e','kaukajarvi_c','Keskisenkatu'],
+  ['kaukajarvi_n','kaukajarvi_c','Juvankatu'],['kaukajarvi_c','kaukajarvi','Juvankatu'],['kaukajarvi','kaukajarvi_s','Juvankatu'],
+  ['koskipuisto','ratina','Ratinan rantatie'],['ratina','hatanpaa','Hatanpään valtatie'],['hatanpaa','viinikka','Viinikankatu'],
+  ['viinikka','nekala','Lempääläntie'],['nekala','hakametsa','Hervannan valtaväylä'],['hatanpaa','lakalaiva','Hatanpään valtatie'],
+  ['lakalaiva','sarankulma','Ilmailunkatu'],['lakalaiva','hervantaj','Hervannan valtaväylä'],['hervantaj','hervantan','Hervannan valtaväylä'],
+  ['hervantan','hervantak','Insinöörinkatu'],['hervantan','hervantavak','Lindforsinkatu'],['hervantak','hervantavak','Lindforsinkatu'],
+  ['hervantaj','vuores','Vuoreksen puistokatu'],['viinikka','asema','Tampereen valtatie'],['hakametsa','hervantaj','Hervannan valtaväylä']
+];
+const ROAD_NAME=(a,b)=>{const e=ROAD_EDGES.find(([x,y])=>(x===a&&y===b)||(x===b&&y===a));return e?e[2]:'street'};
+function bearing(a,b){const y=Math.sin((b[1]-a[1])*Math.PI/180)*Math.cos(b[0]*Math.PI/180),x=Math.cos(a[0]*Math.PI/180)*Math.sin(b[0]*Math.PI/180)-Math.sin(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.cos((b[1]-a[1])*Math.PI/180);return(Math.atan2(y,x)*180/Math.PI+360)%360}
+function roadRouteIds(a,b){
+  const ids=Object.keys(ROAD_NODES);
+  const near=pt=>ids.reduce((best,id)=>dist(pt,ROAD_NODES[id])<dist(pt,ROAD_NODES[best])?id:best,ids[0]);
+  const s=near(a),t=near(b);
+  if(s===t){
+    const corner=[a[0], b[1]];
+    return {ids:[s], pts:[a, corner, b]};
+  }
+  const adj={};ROAD_EDGES.forEach(([x,y])=>{(adj[x]=adj[x]||[]).push(y);(adj[y]=adj[y]||[]).push(x)});
+  const d={[s]:0},prev={},q=new Set(ids);
+  while(q.size){
+    let u=null;q.forEach(n=>{if(d[n]!=null&&(u==null||d[n]<d[u]))u=n});
+    if(u==null)break;q.delete(u);if(u===t)break;
+    (adj[u]||[]).forEach(v=>{const nd=d[u]+dist(ROAD_NODES[u],ROAD_NODES[v]);if(d[v]==null||nd<d[v]){d[v]=nd;prev[v]=u}});
+  }
+  if(d[t]==null)return {ids:[s], pts:[a, [a[0], b[1]], b]};
+  const idsPath=[];for(let n=t;n;n=prev[n])idsPath.unshift(n);
+  return{ids:idsPath,pts:[a,...idsPath.map(n=>ROAD_NODES[n]),b]};
+}
+function roadRoute(a,b){const r=roadRouteIds(a,b);return r?r.pts:[a,b]}
+function roadKm(a,b){const pts=roadRoute(a,b);let k=0;for(let i=1;i<pts.length;i++)k+=dist(pts[i-1],pts[i]);return Math.max(0.15, k*1.08)}
+function roadSteps(a,b){
+  const r=roadRouteIds(a,b);if(!r||r.ids.length<2)return[];
+  const fi=lang==='fi';const steps=[];let segs=[];
+  for(let i=0;i<r.ids.length-1;i++){
+    const name=ROAD_NAME(r.ids[i],r.ids[i+1]);
+    const d=dist(ROAD_NODES[r.ids[i]],ROAD_NODES[r.ids[i+1]]);
+    const last=segs[segs.length-1];
+    if(last&&last.name===name){last.d+=d;last.to=r.ids[i+1]}else segs.push({name,d,from:r.ids[i],to:r.ids[i+1]});
+  }
+  const fmt=d=>d>=1?d.toFixed(1)+' km':Math.max(20,Math.round(d*100)*10)+' m';
+  const walk0=dist(a,ROAD_NODES[r.ids[0]]);
+  if(walk0>0.05)steps.push((fi?'Lähde kohti ':'Head to ')+segs[0]?.name+' · '+fmt(walk0));
+  segs.forEach((s,i)=>{
+    if(i===0){steps.push((fi?'Jatka: ':'Follow ')+s.name+' · '+fmt(s.d));return}
+    const prev=segs[i-1];const b1=bearing(ROAD_NODES[prev.from],ROAD_NODES[prev.to]),b2=bearing(ROAD_NODES[s.from],ROAD_NODES[s.to]);
+    let diff=((b2-b1+540)%360)-180;
+    const turn=Math.abs(diff)<25?(fi?'Jatka suoraan':'Continue straight'):diff>0?(fi?'Käänny oikealle':'Turn right'):(fi?'Käänny vasemmalle':'Turn left');
+    steps.push(`${turn} ${fi?'kadulle':'onto'} ${s.name} · ${fmt(s.d)}`);
+  });
+  steps.push(fi?'Perillä kohteessa':'Arrive at destination');
+  return steps;
+}
+
+function dist(a,b){const R=6371,dLat=(b[0]-a[0])*Math.PI/180,dLng=(b[1]-a[1])*Math.PI/180;const x=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function travel(km,f,roadLen){const r=roadLen||km*1.28;
+  const t={km:r,walking:Math.max(2,Math.round(r/5*60)),bicycling:Math.max(2,Math.round(r/15*60)),driving:Math.max(3,Math.round(2+r/30*60)),transit:Math.max(5,Math.round(5+r/22*60)),tram:null,tramRoute:null};
+  if(f){const tp=tramPlan(start,[f.lat,f.lng]);if(tp){t.tram=tp.total;t.tramPlan=tp;t.tramWalk=tp.walkA;t.tramRoute={line:tp.legs.map(l=>l.line).join('+'),from:tp.legs[0].from,to:tp.legs[tp.legs.length-1].to}}}
+  t.best=['tram','transit','driving','bicycling','walking'].filter(k=>t[k]!=null).sort((a,b)=>t[a]-t[b])[0];
+  t.fastestMode=t.best;t.fastestMin=t[t.best];return t}
+function gmaps(f,mode){return`https://www.google.com/maps/dir/?api=1&origin=${start[0]},${start[1]}&destination=${f.lat},${f.lng}&travelmode=${mode==='tram'?'transit':mode}`}
+function amaps(f,mode){const fl={walking:'w',bicycling:'c',transit:'r',tram:'r',driving:'d'}[mode]||'w';return`https://maps.apple.com/?saddr=${start[0]},${start[1]}&daddr=${f.lat},${f.lng}&dirflg=${fl}`}
+
+/* ── Availability ── */
+function slotsFor(f,room,day){const out=[];const d=new Date();d.setDate(d.getDate()+day);const w=(f.availability||OPEN_WEEK)[d.getDay()]||null;
+  const inSeason=!room.season||room.season.includes(d.getMonth()+1);const closedAll=!!overrides[f.id]?.closed;
+  for(let h=7;h<=21;h++)out.push({h,free:!!w&&inSeason&&!closedAll&&h>=w[0]&&h<w[1]});return out}
+function stampFor(f){return overrides[f.id]?.updated||f.updated||new Date().toISOString()}
+const DEMO_PEOPLE=[{id:'demo1',name:'Aino',age:19,sports:['gym','func']},{id:'demo2',name:'Eetu',age:22,sports:['basketball','ball','hall']},{id:'demo3',name:'Venla',age:17,sports:['martial','judo','aikido']},{id:'demo4',name:'Onni',age:24,sports:['gym','weightlifting']},{id:'demo5',name:'Sara',age:20,sports:['volleyball','ball','gym']},{id:'demo6',name:'Leo',age:18,sports:['tt','hall']}];
+function demoIntents(){if(overrides.__demoOff)return[];const out=[];const d0=new Date();
+  DEMO_PEOPLE.forEach((p,i)=>{FAC.forEach((f,j)=>{if((i+j)%3!==0)return;const day=j%2;const d=new Date(d0);d.setDate(d.getDate()+day);const hour=[17,18,19,10][j%4];
+    const rt=f.rooms.map(r=>r.t);const sp=p.sports.find(s=>rt.includes(roomType(s)));if(!sp)return;
+    out.push({id:`${p.id}_${f.id}_${fmtDate(d)}_${hour}`,uid:p.id,name:p.name,age:p.age,sports:p.sports,fid:f.id,date:fmtDate(d),hour,demo:true})})});return out}
+function allIntents(){return[...Object.values(liveIntents),...demoIntents()]}
+function slotKey(fid,day,hour){const d=new Date();d.setDate(d.getDate()+day);return{date:fmtDate(d),hour}}
+function partnersFor(f,sport,hour){const {date}=slotKey(f.id,query.day,hour);const me=uid||profile?.id;
+  return allIntents().filter(x=>x.fid===f.id&&x.date===date&&x.hour===hour&&x.uid!==me).slice(0,6)}
+
+/* ── Chip helpers ── */
+function buildChips(container,items,multi,sel,onChange){container.innerHTML='';
+  items.forEach(([v,l])=>{const b=document.createElement('button');b.className='chip'+(sel.includes(v)?' on':'');b.type='button';b.dataset.v=v;b.innerHTML=(TICON&&TICON[v]?TICON[v]+' ':'')+esc(l);
+    b.onclick=()=>{if(multi){b.classList.toggle('on')}else{[...container.children].forEach(c=>c.classList.remove('on'));b.classList.add('on')}onChange&&onChange(v)};container.appendChild(b)})}
+const chipVals=c=>[...c.querySelectorAll('.chip.on')].map(b=>b.dataset.v);
+
+/* ── Wizard ── */
+let wstep=1;const WMAX=3;
+function renderWizard(){
+  document.querySelectorAll('.wstep').forEach(d=>d.classList.toggle('on',Number(d.dataset.step)===wstep));
+  $('#wsteps').innerHTML=Array.from({length:WMAX},(_,i)=>`<i class="${i+1<wstep?'done':i+1===wstep?'cur':''}"></i>`).join('');
+  $('#wNext').textContent=wstep===WMAX?(profile?T('saveFind'):T('findPlaces')):T('next')}
+function initSetup(p){p=p||{};wstep=1;renderWizard();
+  $('#fName').value=p.name||'';$('#fAge').value=p.age||'';
+  buildChips($('#fSports'),SPORTS,true,p.sports||['gym']);
+  buildChips($('#fStart'),STARTS,false,[p.start||'centre'],onStartChange);
+  onStartChange(p.start||'centre')}
+function onStartChange(v){const st=$('#locStatus');
+  if(v==='gps'){
+    [...$('#fStart').children].forEach(c=>c.classList.toggle('on',c.dataset.v==='gps'));
+    st.textContent='Requesting permission to access your location…';
+    if(!navigator.geolocation){st.textContent='Geolocation is not supported by this browser. Using Tampere centre.';start=START_COORDS.centre;updateRoutePreview();return}
+    navigator.geolocation.getCurrentPosition(pos=>{
+      start=[pos.coords.latitude,pos.coords.longitude];
+      st.innerHTML=`Location found: <b>${start[0].toFixed(4)}, ${start[1].toFixed(4)}</b>. Routes update as you move.`;startGpsWatch();
+      updateRoutePreview();if(profile){profile.start='gps';profile.startCoords=start;if(map)refreshResults()}
+    },()=>{
+      st.textContent=T('gpsDenied');
+      start=START_COORDS.centre;updateRoutePreview();
+    },{enableHighAccuracy:true,timeout:8000})
+  }else{st.textContent='Selected area: '+(STARTS.find(s=>s[0]===v)?.[1]||'Tampere centre');if(v&&START_COORDS[v])start=START_COORDS[v];updateRoutePreview()}}
+$('#btnAskGps').onclick=()=>onStartChange('gps');
+let pickingStart=false;
+$('#btnPickMap').onclick=()=>{if(!profile){profile=readSetup();try{localStorage.setItem(LS,JSON.stringify(profile))}catch(e){}query={sport:profile.sports[0],day:0,hour:profile.hour};enterHome()}pickingStart=true;showPage('map');toast(T('tapToSet'));$('#mapPill').innerHTML=`<div class="map-pill-main"><b>${T('tapToSet')}</b></div>`};
+function updateRoutePreview(){const box=$('#routePreview');if(!box)return;
+  const ranked=FAC.map(f=>({f,tr:travel(dist(start,[f.lat,f.lng]),f,roadKm(start,[f.lat,f.lng]))})).sort((a,b)=>a.tr.fastestMin-b.tr.fastestMin).slice(0,3);
+  box.innerHTML=`<h4>Fastest to reach from here</h4>`+ranked.map(({f,tr})=>`<div class="rp-row"><span><b>${esc(f.name)}</b> <span class="muted">${tr.km.toFixed(1)} km</span></span><span class="badge ok">${tr.fastestMin} min · ${esc(TNAME[tr.fastestMode])}${tr.fastestMode==='tram'&&tr.tramRoute?' '+tr.tramRoute.line:''}</span></div>`).join('')}
+function nextHour(){const n=new Date();let h=n.getHours()+(n.getMinutes()>0?1:0);return Math.min(21,Math.max(6,h))}
+function readSetup(){const sp=chipVals($('#fSports'));
+  return{id:uid||('local_'+Date.now().toString(36)),name:$('#fName').value.trim(),age:Number($('#fAge').value)||null,sports:sp.length?sp:['gym'],
+    times:profile?.times||['evening'],hour:profile?.hour??nextHour(),transport:profile?.transport||'walking',
+    start:chipVals($('#fStart'))[0]||'centre',startCoords:start,savedAt:new Date().toISOString()}}
+
+$('#wNext').onclick=async()=>{
+  if(wstep===1&&!$('#fName').value.trim()){toast('Please enter your name first');$('#fName').focus();return}
+  if(wstep===2&&!chipVals($('#fSports')).length){toast('Pick at least one sport');return}
+  if(wstep<WMAX){wstep++;renderWizard();return}
+  const had=!!profile;profile=readSetup();
+  try{localStorage.setItem(LS,JSON.stringify(profile))}catch(e){}
+  query={sport:profile.sports[0],day:0,hour:profile.hour};
+  await saveProfileRemote();logActivity(had?'profile':'joined',null,had?`${profile.name} updated their profile`:`${profile.name} joined`);
+  enterHome();showPage('places');toast(had?'Profile saved':`Welcome, ${profile.name}`)};
+
+/* ── Nav ── */
+function showPage(pg){
+  document.querySelectorAll('.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.pg===pg));
+  if(pg==='profile'){
+    if($('#s-admin').classList.contains('on'))return;
+    $('#s-setup').classList.remove('on');$('#s-home').classList.add('on');
+    document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='pg-profile'));
+    buildProfileInline();window.scrollTo({top:0});return}
+  $('#s-setup').classList.remove('on');$('#s-home').classList.add('on');
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='pg-'+pg));
+  if(pg==='match')renderMatch();
+  if(pg==='map'){
+    if(!selected&&cards[0])selected=cards[0].f.id;
+    setTimeout(()=>{if(map){map.invalidateSize();updateMap()}},60);
+    logActivity('map',selected,`${profile?.name} opened the map`);
+  }
+  window.scrollTo({top:0})}
+document.querySelectorAll('.bnav button').forEach(b=>b.onclick=()=>showPage(b.dataset.pg));
+$('#toPlaces').onclick=()=>showPage('places');
+$('#showOnMap').onclick=()=>{if(cards[0])selected=cards[0].f.id;showPage('map')};
+$('#goConfirm').onclick=()=>{const c=cards.find(x=>x.f.id===selected)||cards[0];if(c)openConfirm(c)};
+$('#avatarBtn').onclick=()=>showPage('profile');
+
+/* ── Inline profile editor ── */
+function buildProfileInline(){const c=$('#profileInline');
+  c.innerHTML=`<div class="eyebrow">${T('pName')}</div>
+    <div class="field"><label>${T('name')}</label><input type="text" id="pName" value="${esc(profile.name)}"></div>
+    <div class="field"><label>${T('age')}</label><input type="number" id="pAge" value="${profile.age??''}"></div>
+    <div class="eyebrow">${T('pSports')}</div><div class="chips" id="pSports" style="margin-bottom:16px"></div>
+    <div class="eyebrow">${T('pTimes')}</div><div class="chips" id="pTimes" style="margin-bottom:16px"></div>
+    <div class="field"><label>${T('trainingTime')}: <b id="pHourLbl" style="color:var(--primary)">${hh(profile.hour)}</b></label><input type="range" id="pHour" min="6" max="21" value="${profile.hour}"></div>
+    <div class="eyebrow">${T('pTransport')}</div><div class="seg" id="pTransport" style="margin-bottom:16px"></div>
+    <div class="eyebrow">${T('pStart')}</div><div class="chips" id="pStart" style="margin-bottom:16px"></div>
+    <div class="stackbtns" style="padding-bottom:24px">
+      <button class="btn primary block" id="pSave">${T('save')}</button>
+      <button class="btn ghost block danger" id="pReset" style="color:var(--danger)">${T('reset')}</button>
+    </div>`;
+  buildChips($('#pSports'),SPORTS,true,profile.sports);buildChips($('#pTimes'),TIMES,true,profile.times);
+  buildChips($('#pTransport'),TRANSPORT,false,[profile.transport]);
+  buildChips($('#pStart'),STARTS,false,[profile.start],v=>{if(v==='gps'){navigator.geolocation?.getCurrentPosition(p=>{start=[p.coords.latitude,p.coords.longitude];toast('Location found')},()=>{toast('Location not shared');start=START_COORDS.centre})}else if(v&&START_COORDS[v])start=START_COORDS[v]});
+  $('#pHour').oninput=e=>$('#pHourLbl').textContent=hh(e.target.value);
+  $('#pReset').onclick=()=>{try{localStorage.removeItem(LS)}catch(e){}location.reload()};
+  $('#pSave').onclick=async()=>{const sp=chipVals($('#pSports'));
+    profile={...profile,name:$('#pName').value.trim()||profile.name,age:Number($('#pAge').value)||null,
+      sports:sp.length?sp:profile.sports,times:chipVals($('#pTimes')),hour:Number($('#pHour').value),
+      transport:chipVals($('#pTransport'))[0]||profile.transport,start:chipVals($('#pStart'))[0]||profile.start,startCoords:start,savedAt:new Date().toISOString()};
+    try{localStorage.setItem(LS,JSON.stringify(profile))}catch(e){}
+    if(!profile.sports.includes(query.sport))query.sport=profile.sports[0];query.hour=profile.hour;
+    $('#avatarBtn').textContent=initials(profile.name);
+    await saveProfileRemote();logActivity('profile',null,`${profile.name} updated their profile`);
+    buildQuick();refreshResults();showPage('places');toast('Profile saved')}}
+
+/* ── Map Init (Street Map Only) ── */
+let gpsWatch=null;
+
+function stepText(s){
+  s={t:s.type||s.t,m:s.modifier||s.m||'',name:s.road||s.name,d:s.m!=null&&s.d==null?s.m:s.d};
+  const dStr=s.d>=1000?(s.d/1000).toFixed(1)+' km':Math.max(15,Math.round(s.d/10)*10)+' m';
+  const where=s.name?` ${lang==='fi'?'kadulle':'onto'} ${s.name}`:'';
+  if(s.t==='depart')return (lang==='fi'?'Lähde':'Head out')+where+' · '+dStr;
+  if(s.t==='arrive')return lang==='fi'?'Perillä kohteessa':'Arrive at destination';
+  const turn={left:lang==='fi'?'Käänny vasemmalle':'Turn left',right:lang==='fi'?'Käänny oikealle':'Turn right','slight left':lang==='fi'?'Loivasti vasemmalle':'Slight left','slight right':lang==='fi'?'Loivasti oikealle':'Slight right','sharp left':lang==='fi'?'Jyrkästi vasemmalle':'Sharp left','sharp right':lang==='fi'?'Jyrkästi oikealle':'Sharp right',straight:lang==='fi'?'Jatka suoraan':'Continue straight',uturn:lang==='fi'?'U-käännös':'U-turn'}[s.m]||(lang==='fi'?'Jatka':'Continue');
+  return turn+where+' · '+dStr;
+}
+
+function renderSteps(steps){
+  document.querySelectorAll('#dirs .steps-box').forEach(x=>x.remove());
+  if(!steps?.length)return;
+  const box=document.createElement('details');
+  box.className='more steps-box';
+  box.open=true;
+  box.innerHTML=`<summary>${lang==='fi'?'Reittiohjeet katu kadulta':'Turn-by-turn street directions'} (${steps.length})</summary><ol class="steps-list">${steps.map(s=>`<li>${esc(typeof s==='string'?s:stepText(s))}</li>`).join('')}</ol>`;
+  $('#transitSection').insertAdjacentElement('beforebegin',box);
+}
+
+function startGpsWatch(){if(gpsWatch||!navigator.geolocation)return;
+  gpsWatch=navigator.geolocation.watchPosition(pos=>{const n=[pos.coords.latitude,pos.coords.longitude];if(dist(n,start)<0.03)return;start=n;
+    if(profile){profile.start='gps';profile.startCoords=start}meMarker?.setLatLng(start);if(selected)updateMap();},()=>{},{enableHighAccuracy:true,maximumAge:5000})}
+
+function initMap(){
+  map=L.map('map',{zoomControl:false,attributionControl:true}).setView(start,13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    subdomains:'abc',
+    maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  $('#btnRecenter').onclick=e=>{
+    e.stopPropagation();
+    updateMap();
+  };
+
+  const D=L.latLngBounds([[61.41,23.55],[61.55,23.96]]);
+  map.setMaxBounds(D.pad(0.15));map.options.maxBoundsViscosity=0.9;map.setMinZoom(11);map.setMaxZoom(19);
+
+  map.on('click',e=>{
+    if(!pickingStart)return;
+    pickingStart=false;
+    start=[e.latlng.lat,e.latlng.lng];
+    profile.start='map';profile.startCoords=start;
+    try{localStorage.setItem(LS,JSON.stringify(profile))}catch(e2){}
+    meMarker?.setLatLng(start);
+    refreshResults();
+    updateMap();
+    toast(T('startSet'));
+  });
+
+  L.control.zoom({position:'topleft'}).addTo(map);
+  L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
+
+  meMarker=L.marker(start,{
+    draggable:true,
+    icon:L.divIcon({className:'',html:'<div class="me-wrap"><div class="me-pulse"></div><div class="me"></div></div>',iconSize:[24,24],iconAnchor:[12,12]}),
+    zIndexOffset:950
+  }).addTo(map).bindTooltip('You (drag to move)',{permanent:true,direction:'top',offset:[0,-14]});
+
+  meMarker.on('dragend',e=>{
+    const pos=e.target.getLatLng();
+    start=[pos.lat,pos.lng];
+    if(profile){profile.start='map';profile.startCoords=start;try{localStorage.setItem(LS,JSON.stringify(profile))}catch(err){}}
+    refreshResults();
+    updateMap();
+    toast(T('startSet'));
+  });
+
+  FAC.forEach((f,i)=>{
+    markers[f.id]=L.marker([f.lat,f.lng],{icon:mkIcon(i+1,''),zIndexOffset:1000})
+      .addTo(map)
+      .bindTooltip(f.name,{direction:'top',offset:[0,-38]})
+      .on('click',()=>selectFacility(f.id,'map'));
+  });
+}
+
+function mkIcon(n,cls){return L.divIcon({className:'',html:`<div class="pin ${cls}"><div class="dot">${n}</div><div class="tail"></div></div>`,iconSize:[36,42],iconAnchor:[18,42],tooltipAnchor:[0,-40]})}
+
+function updateMap(){
+  if(!map)return;
+  meMarker?.setLatLng(start);
+  FAC.forEach(f=>{
+    const n=deckOrder.indexOf(f.id);
+    const m=markers[f.id];if(!m)return;
+    if(n<0){if(map.hasLayer(m))map.removeLayer(m);return}
+    if(!map.hasLayer(m))m.addTo(map);
+    m.setIcon(mkIcon(n+1,selected===f.id?'sel':''));
+  });
+
+  const f=FAC.find(x=>x.id===selected);
+  if(f){
+    const tr=travel(dist(start,[f.lat,f.lng]),f,roadKm(start,[f.lat,f.lng]));
+    const mode=profile?.transport||'walking';
+    const modeMin=tr[mode]!=null?tr[mode]:tr[tr.best];
+    $('#mapPill').innerHTML=`
+      <div class="map-pill-main">
+        <b>${esc(f.name)}</b>
+        <span class="muted">${T('streetRoute')} (${esc(TNAME[mode])}) · ${esc(f.addr)}</span>
+      </div>
+      <div class="map-pill-eta">${modeMin} min<span>${tr.km.toFixed(1)} km</span></div>`;
+    $('#mapSub').textContent=`From ${startLabel()}`;
+    renderDirections(f,tr);
+    $('#mapEmptyCta').style.display='none';
+    drawLiveRoute(f,tr);
+  }else{
+    if(smartRoute)smartRoute.clear();
+    const pts=[start,...cards.map(c=>[c.f.lat,c.f.lng])];
+    if(pts.length>1)map.fitBounds(L.latLngBounds(pts),{padding:[40,40],maxZoom:13});
+    $('#mapPill').innerHTML=`<div class="map-pill-main"><b>${T('noPlace')}</b><span class="muted">${T('chooseOne')}</span></div>`;
+    $('#dirs').classList.remove('on');
+    $('#mapEmptyCta').style.display='block';
+  }
+}
+
+async function drawLiveRoute(f,tr){
+  const pref=profile?.transport||'walking';
+  if(!smartRoute){
+    smartRoute=new SmartRoute(map,{
+      onInfo:info=>{
+        const curFac=FAC.find(x=>x.id===selected);
+        if(!curFac)return;
+        const curPref=profile?.transport||'walking';
+        $('#mapPill').innerHTML=`
+          <div class="map-pill-main">
+            <b>${esc(curFac.name)}</b>
+            <span class="muted">${T('streetRoute')} (${esc(TNAME[curPref])}) · ${esc(curFac.addr)}</span>
+          </div>
+          <div class="map-pill-eta">${info.min} min<span>${info.km.toFixed(1)} km</span></div>`;
+        const tile=document.querySelector(`#modes .mode[data-mode="${curPref}"] .t`);
+        if(tile && ['walking','bicycling','driving'].includes(curPref))tile.textContent=info.min+' min';
+        if(info.steps?.length)renderSteps(info.steps);
+        else renderSteps(roadSteps(start,[curFac.lat,curFac.lng]));
+      }
+    });
+  }
+
+  if(pref==='tram' && tr.tramPlan){
+    smartRoute.drawFancyRoute(tr.tramPlan.path, [f.lat,f.lng], tr.km, tr.tram, 'tram', `${TNAME.tram} ${tr.tramRoute.line}`);
+    return;
+  }
+
+  const osrmMode = {walking:'walking',bicycling:'cycling',driving:'driving',transit:'driving',tram:'walking'}[pref]||'walking';
+  const overrideMin = pref==='transit' ? tr.transit : (pref==='tram' && tr.tram ? tr.tram : null);
+  await smartRoute.route(start,[f.lat,f.lng],osrmMode,TNAME[pref],overrideMin);
+}
+
+function renderDirections(f,tr){
+  $('#dirs').classList.add('on');
+  $('#dirsTitle').textContent=`${T('gettingTo')} ${f.name}`;
+  const m=$('#modes');m.innerHTML='';
+  document.querySelectorAll('#dirs .gmaps-link').forEach(x=>x.remove());
+
+  TRANSPORT.forEach(([k,l])=>{
+    const a=document.createElement('button');
+    const avail=tr[k]!=null;
+    a.className='mode'+(profile.transport===k?' pref':'')+(avail?'':' off');
+    a.dataset.mode=k;a.type='button';
+    a.innerHTML=`<div class="mi">${TICON[k]}</div><div class="t">${avail?tr[k]+' min':'–'}</div><div class="d">${esc(l)}</div>`+(avail?'':`<div class="d">${T('noTram')}</div>`);
+    a.onclick=()=>{
+      profile.transport=k;
+      try{localStorage.setItem(LS,JSON.stringify(profile))}catch(e){}
+      saveProfileRemote();
+      buildCards();renderStack();updateMap();
+      logActivity('route',f.id,`${profile?.name} chose ${l} to ${f.name}`);
+    };
+    m.appendChild(a);
+  });
+
+  const gm=document.createElement('div');
+  gm.className='gmaps-link maplinks';
+  gm.innerHTML=`
+    <a class="btn" href="${gmaps(f,profile.transport)}" target="_blank" rel="noopener">Google Maps · ${esc(TNAME[profile.transport])}</a>
+    <a class="btn" href="${amaps(f,profile.transport)}" target="_blank" rel="noopener">Apple Maps · ${esc(TNAME[profile.transport])}</a>`;
+  m.insertAdjacentElement('afterend',gm);
+
+  renderTransit(f,tr);
+}
+
+function renderTransit(f,tr){
+  const sec=$('#transitSection');const pref=profile.transport;
+  if(pref==='tram'){
+    const tp=tr.tramPlan;
+    if(!tp){sec.innerHTML=`<p class="data-notice">${T('noTramLong')}</p>`;return}
+    const fi=lang==='fi';
+    const legs=tp.legs.map(l=>`<div class="route-card"><div class="rl"><div class="line-badge">${l.line}</div><div class="info"><b>${fi?'Ratikka':'Tram'} ${l.line} · ${esc(l.from)} → ${esc(l.to)}</b><div class="ri">${l.stops.length-1} ${fi?'pysäkkiväliä':'stops'} · ~${(l.stops.length-1)*TRAM_MIN_PER_STOP} min · ${fi?'7,5 min välein':'every 7.5 min'}</div></div></div><div class="stops-row">${l.stops.map((s,i)=>(i?'<span class="dot"></span>':'')+esc(s)).join('')}</div></div>`).join('');
+    sec.innerHTML=`<details class="more" open><summary>${fi?'Ratikkareitti':'Tram route'} · ${tp.total} min</summary><div class="small muted" style="margin:6px 0">${fi?'Kävele':'Walk'} ${tp.walkA} min → ${esc(tp.legs[0].from)}${tp.legs.length>1?` · ${fi?'vaihto':'change at'} ${esc(tp.legs[1].from)}`:''} → ${fi?'kävele':'walk'} ${tp.walkB} min</div>${legs}</details>`;
+    return;
+  }
+  if(pref==='transit'){
+    const routes=(BUS_ROUTES[f.id]||[]);
+    if(!routes.length){sec.innerHTML=`<p class="data-notice">${lang==='fi'?'Katso suorat bussilinjat Google Mapsista.':'Street route shown above. Open Google Maps for live Nysse bus departures.'}</p>`;return}
+    sec.innerHTML=`<details class="more" open><summary>${T('ptRoutes')} (${routes.length})</summary><div id="routeList"></div></details>`;
+    const list=$('#routeList');
+    routes.forEach(r=>{list.innerHTML+=`<div class="route-card"><div class="rl"><div class="line-badge ${r.type==='bus'?'bus':''}">${esc(r.line)}</div><div class="info"><b>${r.type==='tram'?'Tram':'Bus'} ${esc(r.line)} · ${esc(r.from)} → ${esc(r.to)}</b><div class="ri">${esc(r.duration)} · ${esc(r.freq)}</div></div></div><div class="stops-row">${r.stops.map((s,i)=>(i?'<span class="dot"></span>':'')+esc(s)).join('')}</div></div>`});
+    return;
+  }
+  const km=tr.km;const mode=pref;const mins=tr[mode];const bestK=tr.best;
+  sec.innerHTML=`<div class="route-card"><div class="rl"><div class="line-badge" style="background:#e8efff;color:var(--primary)">${TICON[mode]}</div><div class="info"><b>${T('routeSummary')} · ${TNAME[mode]}: ${mins} min</b><div class="ri">${km.toFixed(1)} km ${T('viaRoads')}${bestK!==mode?` · ${TNAME[bestK]} ${tr[bestK]} min`:''}</div></div></div></div>`;
+}
+
+function selectFacility(id,src){
+  selected=id;updateMap();const f=FAC.find(x=>x.id===id);
+  if(src==='map'){const i=cards.findIndex(c=>c.f.id===id);if(i>0){const[c]=cards.splice(i,1);cards.unshift(c);if($('#pg-places').classList.contains('on'))renderStack()}}
+  logActivity('look',id,`${profile?.name} viewed ${f?.name}`);
+}
+
+/* ── Quick-pick & cards ── */
+function buildQuick(){const row=$('#quickRow');row.innerHTML='';const now=new Date();const h=now.getHours();
+  const items=[{l:T('qaAt')(SPORT_NAME[profile.sports[0]],hh(profile.hour)),q:{sport:profile.sports[0],day:0,hour:profile.hour}}];
+  if(profile.sports[1])items.push({l:T('qaTonight')(SPORT_NAME[profile.sports[1]]),q:{sport:profile.sports[1],day:0,hour:19}});
+  if(profile.sports[2])items.push({l:T('qaAt')(SPORT_NAME[profile.sports[2]],'18:00'),q:{sport:profile.sports[2],day:0,hour:18}});
+  items.push({l:T('qaNow')(SPORT_NAME[profile.sports[0]]),q:{sport:profile.sports[0],day:0,hour:Math.min(21,Math.max(7,h+(now.getMinutes()>30?1:0)))}});
+  items.push({l:T('qaGymTomorrow'),q:{sport:'gym',day:1,hour:9}});
+  items.forEach(it=>{const b=document.createElement('button');b.className='qa';b.innerHTML=CLOCK+'<span>'+esc(it.l)+'</span>';
+    b.onclick=()=>{query={...it.q};syncQInputs();[...row.children].forEach(c=>c.classList.remove('on'));b.classList.add('on');refreshResults();logActivity('search',null,`${profile.name} searched: ${it.l}`)};row.appendChild(b)});
+  $('#qSport').innerHTML=SPORTS.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join('');
+  buildChips($('#qTransport'),TRANSPORT,false,[profile.transport],v=>{profile.transport=v;try{localStorage.setItem(LS,JSON.stringify(profile))}catch(e){}saveProfileRemote();refreshResults();logActivity('transport',null,`${profile.name} prefers ${TNAME[v]}`)});
+  syncQInputs()}
+function syncQInputs(){$('#qSport').value=query.sport;$('#qDay').value=query.day;$('#qTime').value=query.hour;$('#qTimeLbl').textContent=hh(query.hour)}
+$('#qTime').oninput=e=>$('#qTimeLbl').textContent=hh(e.target.value);
+['qSport','qDay','qTime'].forEach(id=>$('#'+id).addEventListener('change',()=>{query={sport:$('#qSport').value,day:Number($('#qDay').value),hour:Number($('#qTime').value)};
+  [...$('#quickRow').children].forEach(c=>c.classList.remove('on'));refreshResults();logActivity('search',null,`${profile?.name} searched ${$('#qSport').value} ${hh(query.hour)}`)}));
+
+let allSkipped=false,deckTotal=0,deckOrder=[];
+function buildCards(){allSkipped=false;const{sport,day,hour}=query;
+  const rts=roomTypes(sport);cards=FAC.map(f=>{const rooms=f.rooms.filter(r=>rts.includes(r.t));if(!rooms.length)return null;
+    const closed=!!overrides[f.id]?.closed;const byH={};
+    if(!closed)rooms.forEach(r=>slotsFor(f,r,day).forEach(s=>{byH[s.h]=byH[s.h]||[];if(s.free)byH[s.h].push(r.n)}));
+    const freeAt=byH[hour]||[];const tr=travel(dist(start,[f.lat,f.lng]),f,roadKm(start,[f.lat,f.lng]));
+    return{f,rooms,closed,byH,freeAt,tr,partners:partnersFor(f,sport,hour)}})
+    .filter(Boolean).sort((a,b)=>(b.freeAt.length>0)-(a.freeAt.length>0)||(a.tr[profile.transport]??a.tr[a.tr.best])-(b.tr[profile.transport]??b.tr[b.tr.best]))}
+function refreshResults(){buildCards();deckTotal=cards.length;deckOrder=cards.map(c=>c.f.id);selected=cards[0]?.f.id||null;
+  const sn=SPORTS.find(s=>s[0]===query.sport)?.[1]||query.sport;
+  $('#qAnswer').innerHTML=T('resultsLine')(cards.length,esc(sn),query.day?T('tomorrow'):T('today'),hh(query.hour));
+  renderStack();updateMap()}
+function cardHTML(c){const f=c.f;const stamp=stampFor(f);const tr=c.tr;const best=tr[profile.transport]!=null?profile.transport:tr.best;
+  const status=c.closed?'<span class="badge closed">Closed by operator</span>':'';
+  const alt=TRANSPORT.filter(([k])=>k!==best).map(([k,l])=>`${l} ${tr[k]!=null?tr[k]+' min':'–'}`).join(' · ');
+  const others=c.partners.length;
+  const tot=deckTotal||cards.length,pos=tot-cards.length+cards.indexOf(c)+1;const idx=FAC.indexOf(f);const going=myIntents().find(x=>x.fid===f.id&&x.hour===query.hour&&x.date===slotKey(f.id,query.day,query.hour).date);
+  return`<div class="stamp yes">${T('choose')}</div><div class="stamp no">${T('skip')}</div>
+    <div class="banner b${idx%4}"><span class="bn">${pos}</span><span class="bt">${esc(SPORT_NAME[query.sport]||'')}</span></div>
+    <div class="rank"><span>${T('nearest')}</span><i>${Array.from({length:tot},(_,i)=>`<b class="${i<pos?'on':''}"></b>`).join('')}</i><span>${T('farthest')}</span><em>${pos}/${tot}</em></div>
+    <h3>${esc(f.name)}</h3><div class="fi">${esc(f.addr)} · <span class="badge ${f.kind==='timmi'?'grey':'ok'}">${f.kind==='timmi'?T('timmiOnly'):T('liikkuva')}</span></div>
+    <div class="kv"><div class="k">${T('yourTime')}</div><div class="v">${hh(query.hour)} <span class="small muted">${query.day?T('tomorrow'):T('today')}</span></div>${status}</div>
+    <div class="kv"><div class="k">${T('travel')}</div><div class="v">${tr[best]} min <span class="small muted">${T('by')} ${TNAME[best].toLowerCase()}${tr.tramRoute&&best==='tram'?' '+tr.tramRoute.line:''}</span></div><div class="small muted">${tr[profile.transport]==null?T('noTram')+' · ':''}${alt}</div></div>
+    <div class="kv"><div class="k">${T('going')}</div><div class="v">${others+(going?1:0)}</div><div class="small muted">${others?esc(c.partners.slice(0,3).map(p=>p.name).join(', ')):T('beFirst')}</div></div>
+    ${going?`<button class="btn primary block" disabled style="padding:10px;opacity:1">${T('youGoing')}</button><button class="btn block notgoing" data-leave="${going.id}">${T('notGoing')}</button>`:`<button class="btn primary block" data-join="${f.id}" style="padding:10px">${T('imGoing')} ${hh(query.hour)}</button>`}
+    <div class="cardbtns"><button class="rbtn no" data-swipe="-1" aria-label="Skip">✕</button><button class="rbtn yes" data-swipe="1" aria-label="Choose">♥</button></div>
+    <button class="btn startover${cards.length<deckTotal?' notgoing':' ghost'}" data-startover="1">${T('startOver')}</button>
+    <details class="cd" open><summary>${T('details')}</summary>
+      <div class="small"><b>${T('rooms')} ${esc(SPORT_NAME[query.sport])}:</b> ${esc(f.rooms.filter(r=>roomTypes(query.sport).includes(r.t)).map(r=>r.n).join(', '))}</div>
+      <div class="small"><b>${T('goingAt')} ${hh(query.hour)}:</b> ${others?esc(c.partners.map(p=>p.name).join(', ')):T('nobodyYet')}</div>
+      <div class="small muted">${esc(f.fi)} · ${T('updated')} ${fmtDate(new Date(stamp))}</div>
+    </details>`}
+function renderStack(){const st=$('#stack');st.innerHTML='';
+  if(!cards.length){const d=document.createElement('div');d.className='empty';d.innerHTML=`<div>${esc(T(allSkipped?'allSkipped':'noRooms'))}<br><button class="btn primary" style="margin-top:12px" onclick="refreshResults()">${esc(T('startOver'))}</button></div>`;st.appendChild(d);return}
+  cards.slice(0,3).reverse().forEach((c,i,arr)=>{const k=arr.length-1-i;const d=document.createElement('div');d.className='fcard '+(k===1?'n1':k===2?'n2':'');d.innerHTML=cardHTML(c);st.appendChild(d);if(k===0)attachSwipe(d);d.querySelectorAll('[data-join]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();joinSlot(c.f,query.day,query.hour)});d.querySelectorAll('[data-join],[data-leave],[data-swipe],[data-startover]').forEach(b=>b.addEventListener('pointerdown',ev=>ev.stopPropagation()));d.querySelectorAll('[data-startover]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();refreshResults();toast(T('startedOver'))});d.querySelectorAll('[data-leave]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();leaveSlot(b.dataset.leave)});d.querySelectorAll('[data-swipe]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();swipe(Number(b.dataset.swipe))})});
+  if(!selected&&cards[0]){selected=cards[0].f.id}}
+function attachSwipe(card){let sx=0,dx=0,dr=false;const yes=card.querySelector('.stamp.yes'),no=card.querySelector('.stamp.no');
+  card.addEventListener('pointerdown',e=>{if(e.target.closest('a,button,summary,details,input'))return;sx=e.clientX;dr=true;card.classList.add('drag');card.setPointerCapture(e.pointerId)});
+  card.addEventListener('pointermove',e=>{if(!dr)return;dx=e.clientX-sx;card.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;yes.style.opacity=Math.min(1,Math.max(0,dx/80));no.style.opacity=Math.min(1,Math.max(0,-dx/80))});
+  const end=()=>{if(!dr)return;dr=false;card.classList.remove('drag');if(dx>90)swipe(1);else if(dx<-90)swipe(-1);else{card.style.transform='';yes.style.opacity=no.style.opacity=0}dx=0};
+  card.addEventListener('pointerup',end);card.addEventListener('pointercancel',end)}
+function swipe(dir){const c=cards[0];if(!c)return;const top=$('#stack .fcard:last-child');
+  if(top){top.style.transform=`translateX(${dir*520}px) rotate(${dir*20}deg)`;top.style.opacity='0'}
+  setTimeout(()=>{if(dir>0){selected=c.f.id;updateMap();logActivity('choose',c.f.id,`${profile?.name} chose ${c.f.name}`);renderStack();openConfirm(c)}
+    else{cards.shift();if(!cards.length)allSkipped=true;logActivity('skip',c.f.id,`${profile?.name} skipped ${c.f.name}`);selected=cards[0]?.f.id||null;renderStack();updateMap()}},220)}
+
+/* ── Matching ── */
+const LSI='lt_intents',LSW='lt_waves';
+function myId(){return uid||profile?.id||'local'}
+function loadLocal(k){try{return JSON.parse(localStorage.getItem(k)||'{}')}catch(e){return{}}}
+function myIntents(){const me=myId();return allIntents().filter(x=>x.uid===me)}
+async function joinSlot(f,day,hour){const {date}=slotKey(f.id,day,hour);const id=`${myId()}_${f.id}_${date}_${hour}`;
+  const doc={id,uid:myId(),name:profile.name,age:profile.age,sports:profile.sports,fid:f.id,date,hour,ts:new Date().toISOString()};
+  if(db&&uid&&writeOk){try{await db.doc('intents/'+id).set(doc)}catch(e){}}
+  else{const l=loadLocal(LSI);l[id]=doc;localStorage.setItem(LSI,JSON.stringify(l));liveIntents=l}
+  logActivity('join',f.id,`${profile.name} is going to ${f.name} at ${hh(hour)} ${day?'tomorrow':'today'}`);toast(`You're going to ${f.name} at ${hh(hour)}`);renderStack();renderMatch();updateBadge()}
+async function leaveSlot(id){if(db&&uid&&writeOk){try{await db.doc('intents/'+id).delete()}catch(e){}}else{const l=loadLocal(LSI);delete l[id];localStorage.setItem(LSI,JSON.stringify(l));liveIntents=l}renderStack();renderMatch();updateBadge()}
+function waveId(a,b){return `${a}__${b}`}
+async function wave(target){const id=waveId(myId(),target.uid);const doc={from:myId(),fromName:profile.name,to:target.uid,toName:target.name,fid:target.fid,date:target.date,hour:target.hour,ts:new Date().toISOString()};
+  if(db&&uid&&writeOk){try{await db.doc('waves/'+id).set(doc)}catch(e){}}else{const w=loadLocal(LSW);w[id]=doc;if(target.demo&&!overrides.__demoOff){w[waveId(target.uid,myId())]={...doc,from:target.uid,fromName:target.name,to:myId(),toName:profile.name}}localStorage.setItem(LSW,JSON.stringify(w));liveWaves=w}
+  logActivity('wave',target.fid,`${profile.name} asked ${target.name} to train together`);toast(`Request sent to ${target.name}`);renderMatch();updateBadge()}
+function waveState(uidOther){const me=myId();const out=!!liveWaves[waveId(me,uidOther)],inn=!!liveWaves[waveId(uidOther,me)];return out&&inn?'matched':out?'sent':inn?'received':''}
+function updateBadge(){const n=myIntents().reduce((a,mi)=>a+allIntents().filter(x=>x.fid===mi.fid&&x.date===mi.date&&x.hour===mi.hour&&x.uid!==myId()&&waveState(x.uid)==='matched').length,0);const b=$('#matchBadge');if(b){b.hidden=!n;b.textContent=n}}
+function popularHTML(){const g={};allIntents().forEach(x=>{const k=`${x.fid}|${x.date}|${x.hour}`;(g[k]=g[k]||[]).push(x)});const me=myId();
+  const items=Object.entries(g).map(([k,ps])=>({k,ps,f:FAC.find(f=>f.id===ps[0].fid),date:ps[0].date,hour:ps[0].hour,mine:ps.some(x=>x.uid===me)})).filter(x=>x.f&&x.ps.length>=2&&!x.mine).sort((a,b)=>b.ps.length-a.ps.length).slice(0,5);
+  if(!items.length)return'';return`<div class="eyebrow">${T('popular')}</div>`+items.map(x=>`<div class="card slotcard"><h3>${esc(x.f.name)}</h3><div class="when">${x.date===fmtDate(new Date())?T('todayCap'):x.date} · ${hh(x.hour)} · <b>${x.ps.length}</b> ${T('goingN')} · ${esc(x.ps.slice(0,3).map(p=>p.name).join(', '))}</div><div class="join-row"><button class="btn primary" data-joinslot="${x.k}">${T('join')}</button></div></div>`).join('')}
+function bindPopular(body){body.querySelectorAll('[data-joinslot]').forEach(b=>b.onclick=()=>{const [fid,date,hour]=b.dataset.joinslot.split('|');const f=FAC.find(x=>x.id===fid);const day=date===fmtDate(new Date())?0:1;if(f)joinSlot(f,day,Number(hour))})}
+function renderMatch(){const body=$('#matchBody');if(!body)return;const mine=myIntents();
+  const pop=popularHTML();
+  if(!mine.length){body.innerHTML=`<div class="note info">${T('noSlot')}</div>`+pop;bindPopular(body);return}
+  body.innerHTML=mine.map(mi=>{const f=FAC.find(x=>x.id===mi.fid);const people=allIntents().filter(x=>x.fid===mi.fid&&x.date===mi.date&&x.hour===mi.hour&&x.uid!==myId());
+    const rows=people.length?people.map(p=>{const st=waveState(p.uid);const shared=(p.sports||[]).filter(s=>profile.sports.includes(s)).map(s=>SPORT_NAME[s]).filter(Boolean);
+      const btn=st==='matched'?`<button class="btn matched" disabled>${T('matched')}</button>`:st==='sent'?`<button class="btn" disabled>${T('sent')}</button>`:`<button class="btn primary" data-wave="${p.uid}">${st==='received'?T('accept'):T('trainTogether')}</button>`;
+      return `<div class="prow"><i>${esc(initials(p.name))}</i><div class="pi"><b>${esc(p.name)}${p.age?', '+p.age:''}${p.demo?' <span class="badge grey">demo</span>':''}</b><span>${shared.length?T('alsoLikes')+' '+esc(shared.join(', ')):esc((p.sports||[]).slice(0,3).map(s=>SPORT_NAME[s]||s).join(', '))}</span></div>${btn}</div>`}).join(''):`<div class="prow"><span class="small muted">${T('nobodySlot')}</span></div>`;
+    return `<div class="card slotcard"><h3>${esc(f.name)}</h3><div class="when">${mi.date===fmtDate(new Date())?T('todayCap'):mi.date} · ${hh(mi.hour)} · ${people.length+1} ${T('goingN')}</div>${rows}<div class="join-row"><button class="btn notgoing" style="margin:0" data-leave="${mi.id||`${myId()}_${mi.fid}_${mi.date}_${mi.hour}`}">${T('notGoing')}</button></div></div>`}).join('');
+  body.innerHTML+=pop;bindPopular(body);
+  body.querySelectorAll('[data-wave]').forEach(b=>b.onclick=()=>{const p=allIntents().find(x=>x.uid===b.dataset.wave);if(p)wave(p)});
+  body.querySelectorAll('[data-leave]').forEach(b=>b.onclick=()=>leaveSlot(b.dataset.leave))}
+
+/* ── Confirm flow ── */
+let confirmStep=1,confirmCard=null;
+function openConfirm(c){confirmCard=c;confirmStep=activeSession&&activeSession.fid===c.f.id?4:1;renderConfirm();$('#confirmOverlay').classList.add('on')}
+function renderConfirm(){const s=$('#confirmSheet');const c=confirmCard;const f=c.f;
+  const steps=[T('step1'),T('step2'),T('step3'),T('step4')];let body='';
+  if(confirmStep===1)body=`<div class="note warn">${T('timmiWarn')}</div>
+    <div class="note info" style="margin-top:8px">${T('personal')}</div>
+    <p class="small muted" style="margin:12px 0 0">${T('yourPick')}: <b>${esc(f.name)}</b> · ${esc(SPORT_NAME[query.sport])} · ${query.day?T('tomorrow'):T('today')} ${hh(query.hour)}</p>
+    <div class="stackbtns"><a class="btn block" href="https://timmi.tampere.fi/WebTimmi/login.do?adminAreaId=68&amp;loginName=GUEST&amp;password=GUEST&amp;uInterfaceVersion=21" target="_blank" rel="noopener">${T('openTimmi')}</a><button class="btn primary block" id="cNext">${T('checked')}</button></div>`;
+  if(confirmStep===2)body=`<p class="small muted">${T('buyText')}</p>
+    <div class="stackbtns"><a class="btn primary block" href="https://osteri.pusatec.fi/en/tampere-sport" target="_blank" rel="noopener" id="buyLink">${T('openShop')}</a><button class="btn block" id="cNext">${T('haveTicket')}</button></div>`;
+  if(confirmStep===3)body=`<p class="small muted">${T('headTo')} <b>${esc(f.name)}</b> (${esc(f.addr)}). ${T('arriveText')}</p>
+    <div class="modes" style="margin:10px 0">${TRANSPORT.map(([k,l])=>`<button type="button" data-cmode="${k}" class="mode${c.tr[k]==null?' off':''}${profile.transport===k?' pref':''}"><div class="mi">${TICON[k]}</div><div class="t">${c.tr[k]!=null?c.tr[k]+' min':'–'}</div><div class="d">${l}</div>${c.tr[k]==null?`<div class="d">${T('noTram')}</div>`:''}</button>`).join('')}</div>
+    <a class="btn block" href="${gmaps(f,profile.transport)}" target="_blank" rel="noopener" style="margin-top:4px">${T('liveGmaps')}</a>
+    <div class="stackbtns"><button class="btn primary block" id="cNext">${T('arrived')}</button></div>`;
+  if(confirmStep===4){body=`<p class="small muted" style="text-align:center;margin:0">${T('maxSession')}</p>
+    <div class="timer" id="timerVal">3:00:00</div><div class="bar"><i id="timerBar" style="width:100%"></i></div>
+    <p class="small muted" style="text-align:center">${activeSession?`${T('endsAt')} ${fmtTime(new Date(activeSession.end))} · ${esc(f.name)}`:''}</p>
+    <div class="stackbtns"><button class="btn danger block" id="cEnd">${T('endWorkout')}</button></div>`}
+  s.innerHTML=`<div class="grab"></div><h2>${esc(steps[confirmStep-1])}</h2>
+    <div class="confsteps">${steps.map((t,i)=>`<div class="cstep ${i+1<confirmStep?'done':i+1===confirmStep?'cur':''}"><i></i>${t}</div>`).join('')}</div>${body}
+    <button class="btn ghost block" id="cClose" style="margin-top:8px">${confirmStep===4?T('hide'):T('cancel')}</button>`;
+  $('#cClose').onclick=()=>$('#confirmOverlay').classList.remove('on');
+  s.querySelectorAll('[data-cmode]').forEach(btn=>{
+    btn.onclick=()=>{
+      profile.transport=btn.dataset.cmode;
+      try{localStorage.setItem(LS,JSON.stringify(profile))}catch(e){}
+      saveProfileRemote();
+      buildCards();renderStack();updateMap();renderConfirm();
+    };
+  });
+  const nx=$('#cNext');if(nx)nx.onclick=()=>{if(confirmStep===3)startSession();confirmStep++;renderConfirm();logActivity('step',f.id,`${profile?.name} reached step ${confirmStep} at ${f.name}`)};
+  $('#buyLink')?.addEventListener('click',()=>logActivity('ticket',f.id,`${profile?.name} opened ticket store`));
+  $('#cEnd')?.addEventListener('click',endSession);
+  if(confirmStep===4)tickTimer()}
+function startSession(){activeSession={fid:confirmCard.f.id,start:Date.now(),end:Date.now()+3*3600*1000};
+  try{localStorage.setItem('lt_session',JSON.stringify(activeSession))}catch(e){}saveSessionRemote(true);toast('Workout started. 3 hours max')}
+function endSession(){activeSession=null;try{localStorage.removeItem('lt_session')}catch(e){}saveSessionRemote(false);$('#confirmOverlay').classList.remove('on');
+  logActivity('end',confirmCard?.f.id,`${profile?.name} ended a workout`);toast('Workout ended. Nice work')}
+function tickTimer(){const v=$('#timerVal'),b=$('#timerBar');if(!v||!activeSession)return;const left=Math.max(0,activeSession.end-Date.now());
+  const h=Math.floor(left/3600000),m=Math.floor(left%3600000/60000),s=Math.floor(left%60000/1000);v.textContent=`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;b.style.width=(left/(3*3600000)*100)+'%';
+  if(left<=0){toast('Your 3 hours are up!');return}setTimeout(tickTimer,1000)}
+$('#confirmOverlay').addEventListener('click',e=>{if(e.target.id==='confirmOverlay')e.target.classList.remove('on')});
+
+/* ── Shared data (db) ── */
+async function initCaps(){try{userCap=await window.claude?.use?.('user');db=await window.claude?.use?.('db')}catch(e){}
+  if(userCap){uid=await userCap.id();if(uid)uid=String(uid).replace(/[^A-Za-z0-9_\-.~:@+]/g,'-');isOwner=await userCap.isOwner()}
+  if(!db)$('#adminMode').textContent='Preview mode: shared data is unavailable here, so the admin view shows only activity from this device.';
+  if(isOwner||!db){$('#tabAdmin').hidden=false;document.getElementById('tabs').hidden=false;document.getElementById('tabs').style.display='flex'}
+  if(db){db.collection('profiles').onSnapshot(q=>{liveProfiles={};q.docs.forEach(d=>{if(d.exists)liveProfiles[d.id]={id:d.id,...d.data()}});if(profile)renderStack();renderAdmin()},()=>{});
+    db.collection('activity').onSnapshot(q=>{liveActivity=q.docs.filter(d=>d.exists).map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,150);renderAdmin()},()=>{});
+    db.collection('intents').onSnapshot(q=>{liveIntents={};q.docs.forEach(d=>{if(d.exists)liveIntents[d.id]={id:d.id,...d.data()}});if(profile){renderStack();renderMatch()}},()=>{});
+    db.collection('waves').onSnapshot(q=>{liveWaves={};q.docs.forEach(d=>{if(d.exists)liveWaves[d.id]=d.data()});renderMatch()},()=>{});
+    db.collection('sessions').onSnapshot(q=>{liveSessions={};q.docs.forEach(d=>{if(d.exists)liveSessions[d.id]=d.data()});renderAdmin()},()=>{});
+    db.doc('control/overrides').onSnapshot(d=>{overrides=d.exists?(d.data().facilities||{}):{};if(profile){buildCards();renderStack();updateMap()}renderAdmin()},()=>{})}}
+let writeOk=true,actSeq=0,localActivity=[];
+async function saveProfileRemote(){if(!db||!uid||!writeOk)return;try{const{startCoords,...p}=profile;await db.doc('profiles/'+uid).set({...p,lastSeen:new Date().toISOString()})}catch(e){writeOk=false}}
+async function logActivity(type,fid,text){const ev={type,fid:fid||null,text,ts:new Date().toISOString(),uid:uid||profile?.id||'local',name:profile?.name||'User'};
+  localActivity.unshift(ev);localActivity=localActivity.slice(0,150);renderAdmin();if(!db||!uid||!writeOk)return;
+  try{await db.collection('activity').doc(`${uid}_${Date.now()}_${actSeq++}`).set(ev)}catch(e){if(e?.code==='invalid_argument')writeOk=false}}
+async function saveSessionRemote(active){if(!db||!uid||!writeOk)return;try{const ref=db.doc('sessions/'+uid);if(active)await ref.set({...activeSession,name:profile?.name});else await ref.delete()}catch(e){}}
+async function setOverride(fid,patch){const next={...overrides,[fid]:{...(overrides[fid]||{}),...patch}};
+  if(db&&isOwner){try{await db.doc('control/overrides').set({facilities:next});return}catch(e){}}
+  overrides=next;buildCards();renderStack();updateMap();renderAdmin()}
+
+/* ── Admin render ── */
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.style.color=x.dataset.tab===b.dataset.tab?'var(--primary)':'var(--muted)');
+  const t=b.dataset.tab;$('#s-home').classList.toggle('on',t==='home');$('#s-admin').classList.toggle('on',t==='admin');$('#bnav').classList.toggle('on',t==='home');if(t==='admin')renderAdmin();if(t==='home')setTimeout(()=>map?.invalidateSize(),60)});
+function renderAdmin(){if(!$('#s-admin').classList.contains('on'))return;
+  const acts=db?liveActivity:localActivity;const profs=db?Object.values(liveProfiles):(profile?[profile]:[]);
+  const all=profs;
+  $('#kUsers').textContent=all.length;const cutoff=Date.now()-30*60000;const latest={};
+  acts.filter(a=>new Date(a.ts)>cutoff&&['look','choose','search','step','route'].includes(a.type)).forEach(a=>{if(!latest[a.uid])latest[a.uid]=a});
+  const lookers=Object.values(latest);$('#kLooking').textContent=lookers.length;$('#kSessions').textContent=db?Object.keys(liveSessions).length:(activeSession?1:0);
+  const perFac={};lookers.forEach(l=>{if(l.fid){perFac[l.fid]=perFac[l.fid]||[];perFac[l.fid].push(l)}});const max=Math.max(1,...Object.values(perFac).map(a=>a.length));
+  $('#lookList').innerHTML=FAC.map(f=>{const ls=perFac[f.id]||[];return`<div class="lookrow"><div><b style="font-size:14px">${esc(f.name)}</b><div class="small muted">${ls.length?ls.map(l=>esc(l.name)).join(', '):'No one right now'}</div></div><div style="width:80px"><div class="bar2" style="width:${ls.length/max*100}%"></div></div></div>`}).join('');
+  $('#ctrlList').innerHTML=FAC.map(f=>{const o=overrides[f.id]||{};return`<div class="toggle"><div><b style="font-size:14px">${esc(f.name)}</b><div class="small muted">Data stamp: ${fmtAgo(stampFor(f))}</div></div><button class="btn" style="padding:6px 10px;font-size:12px" data-refresh="${f.id}">Refresh</button><button class="sw ${o.closed?'on':''}" data-close="${f.id}" aria-label="Toggle closed"></button></div>`}).join('');
+  const dsw=$('#demoSw');if(dsw){dsw.classList.toggle('on',!overrides.__demoOff);dsw.onclick=()=>{const next={...overrides,__demoOff:!overrides.__demoOff};if(db&&isOwner){db.doc('control/overrides').set({facilities:next}).catch(()=>{})}else{overrides=next;renderStack();renderMatch();renderAdmin()}}}
+  $('#ctrlList').querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>setOverride(b.dataset.close,{closed:!overrides[b.dataset.close]?.closed}));
+  $('#ctrlList').querySelectorAll('[data-refresh]').forEach(b=>b.onclick=()=>setOverride(b.dataset.refresh,{updated:new Date().toISOString()}));
+  $('#profTable tbody').innerHTML=all.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${p.age??''}</td><td>${(p.sports||[]).map(s=>esc(SPORT_NAME[s]||s)).join(', ')}</td><td>${(p.times||[]).join(', ')} ${p.hour!=null?'· '+hh(p.hour):''}</td><td>${esc(TNAME[p.transport]||p.transport||'')}</td><td>${p.lastSeen?fmtAgo(p.lastSeen):''}</td></tr>`).join('');
+  const feed=acts.slice(0,60);
+  $('#feed').innerHTML=feed.length?feed.map(a=>`<div class="card ev"><time>${fmtTime(new Date(a.ts))}</time><span>${esc(a.text)}</span></div>`).join(''):'<div class="card ev muted">No activity yet.</div>'}
+
+/* ── Boot ── */
+function enterHome(){document.body.classList.add('has-nav');$('#s-setup').classList.remove('on');$('#s-home').classList.add('on');$('#bnav').classList.add('on');$('#avatarBtn').hidden=false;$('#avatarBtn').textContent=initials(profile.name);
+  if(!map)initMap();setTimeout(()=>map?.invalidateSize(),60);buildQuick();refreshResults()}
+(async function boot(){applyLang();
+  try{const p=localStorage.getItem(LS);if(p)profile=JSON.parse(p)}catch(e){}
+  try{const s=localStorage.getItem('lt_session');if(s){activeSession=JSON.parse(s);if(activeSession.end<Date.now())activeSession=null}}catch(e){}
+  if(profile?.startCoords)start=profile.startCoords;
+  initCaps().then(()=>{if(profile)saveProfileRemote();if(!db){liveIntents=loadLocal(LSI);liveWaves=loadLocal(LSW)}if(profile){renderStack();updateBadge()}});
+  if(profile){enterHome();showPage('places');if(profile.start==='gps'){onStartChange('gps');startGpsWatch()}}else initSetup(null);
+  if(location.hash.replace('#','')===('admin'))setTimeout(()=>{if(!$('#tabAdmin').hidden)document.querySelector('[data-tab=admin]').click()},1500)})();
+</script>
+</body>
+</html>
